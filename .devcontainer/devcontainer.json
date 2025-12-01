@@ -1,36 +1,36 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
-	"name": "Ubuntu_latest",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	"mounts": [
-		 "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent"
-	],
-	"workspaceMount": "source=${localWorkspaceFolder}/,target=/home/devcontainer/workspace,type=bind",
-	"workspaceFolder": "/home/devcontainer/workspace",
-	"postCreateCommand": "/bin/bash .devcontainer/res/post_create_command.bash",
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"skellock.just",
-				"ms-python.python",
-				"ms-python.pylint",
-				"ms-python.autopep8",
-				"tamasfe.even-better-toml",
-				"VisualStudioExptTeam.vscodeintellicode"
-			]
-		}
-	},
-	"runArgs": [
-		"--network=host",
-		"--privileged",
-		"--volume=/home/${localEnv:USER}/.ssh:/home/devcontainer/.ssh",
-	],
-	"overrideCommand": true,
-	"remoteUser": "devcontainer",
-	"remoteEnv": {
-		"SSH_AUTH_SOCK": "/ssh-agent"
-	}
+  "name": "base",
+  "build": {
+    "dockerfile": "base/Dockerfile",   // <== we’ll create this next
+    "context": ".."
+  },
+
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/devcontainer/workspace,type=bind",
+  "workspaceFolder": "/home/devcontainer/workspace",
+
+  "mounts": [
+    "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent",
+    "type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/devcontainer/.ssh,readonly=true"
+  ],
+
+  "remoteUser": "devcontainer",
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+
+  "overrideCommand": true,
+  "postCreateCommand": "/bin/bash .devcontainer/res/post_create_command.bash",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "skellock.just",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.autopep8",
+        "tamasfe.even-better-toml",
+        "VisualStudioExptTeam.vscodeintellicode"
+      ]
+    }
+  }
 }
