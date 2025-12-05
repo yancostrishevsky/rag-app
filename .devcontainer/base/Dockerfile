@@ -1,23 +1,37 @@
-# ------------------------------------------------------------------------
-# This file contains the definition of a docker image used in course
-# of the development process. The image built from this config contains
-# the basic dependencies one needs in order to be able to setup the whole
-# environment without installing anything locally on the system.
-# ------------------------------------------------------------------------
-
 FROM ubuntu:noble
 
 SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
 
-ARG USERNAME=devcontainer
-ARG USER_UID=1000
-ARG USER_GID=1000
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      wget \
+      git \
+      sudo \
+      just \
+      openssh-client \
+      jq \
+      python3 \
+      python3-pip \
+      docker.io \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir --break-system-packages docker-compose
+
+ARG USERNAME=base
+
+RUN if ! id "${USERNAME}" >/dev/null 2>&1; then \
+      groupadd "${USERNAME}" || true; \
+      useradd -m -s /bin/bash -g "${USERNAME}" "${USERNAME}"; \
+    fi
 
 COPY .devcontainer/scripts/base-setup.sh /tmp/base-setup.sh
+RUN chmod +x /tmp/base-setup.sh \
+    && USERNAME="${USERNAME}" /tmp/base-setup.sh \
+    && rm /tmp/base-setup.sh
 
-RUN chmod +x /tmp/base-setup.sh && \
-    USERNAME=${USERNAME} USER_UID=${USER_UID} USER_GID=${USER_GID} /tmp/base-setup.sh && \
-    rm /tmp/base-setup.sh
-
-WORKDIR /home/${USERNAME}/workspace
 USER ${USERNAME}
+WORKDIR /home/${USERNAME}/workspace
+ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"

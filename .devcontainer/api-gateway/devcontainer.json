@@ -1,34 +1,30 @@
 {
   "name": "api-gateway",
+
   "build": {
-    "dockerfile": "Dockerfile",
+    "dockerfile": "../base/Dockerfile",
     "context": "../.."
   },
 
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/devcontainer/workspace,type=bind",
-  "workspaceFolder": "/home/devcontainer/workspace/services/api-gateway",
-
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/base/workspace,type=bind",
+  "workspaceFolder": "/home/base/workspace",
 
   "mounts": [
     "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent",
-    "type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/devcontainer/.ssh,readonly=true"
+    "type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/base/.ssh,readonly=true",
+    "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
   ],
 
-  "runArgs": [
-    "--name=api-gateway"
-  ],
-
-  "remoteUser": "devcontainer",
+  "remoteUser": "base",
   "remoteEnv": {
     "SSH_AUTH_SOCK": "/ssh-agent"
   },
 
   "overrideCommand": true,
 
-  "postCreateCommand": "",
-  "postStartCommand": "uvicorn app.main:app --host 0.0.0.0 --port 8000",
+  "postCreateCommand": "pip install --break-system-packages -r services/api-gateway/requirements.txt",
 
+  "postStartCommand": "uvicorn services.api-gateway.app.main:app --host 0.0.0.0 --port 8000",
 
   "forwardPorts": [8000]
 }
-

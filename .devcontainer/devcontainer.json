@@ -1,7 +1,7 @@
 {
   "name": "base",
   "build": {
-    "dockerfile": "base/Dockerfile",   // <== we’ll create this next
+    "dockerfile": "base/Dockerfile", 
     "context": ".."
   },
 

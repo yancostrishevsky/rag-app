@@ -1,0 +1,30 @@
+{
+  "name": "llm-proxy",
+  "build": {
+    "dockerfile": "../base/Dockerfile",
+    "context": "../.."
+  },
+
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace/services/llm-proxy",
+
+
+ "mounts": [
+    "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent",
+    "type=bind,source=/home/${localEnv:USER}/.ssh,target=/root/.ssh,readonly=true",
+    "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
+  ],
+
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+
+  "overrideCommand": true,
+
+  "postCreateCommand": "pip install --user --break-system-packages -r requirements.txt",
+  "postStartCommand": "uvicorn app.main:app --host 0.0.0.0 --port 8000",
+
+
+  "forwardPorts": [8000]
+}
+
