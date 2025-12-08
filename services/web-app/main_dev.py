@@ -4,7 +4,7 @@ import logging.config
 import gradio as gr
 import hydra
 import omegaconf
-import web
+import web_app
 
 
 def _logger() -> logging.Logger:
@@ -41,7 +41,7 @@ logging.config.dictConfig({
     }
 })
 
-backend_service = web.backend_communication.BackendService(
+backend_service = web_app.backend_communication.BackendService(
     backend_url=cfg.backend_entrypoint_url
 )
 
@@ -52,8 +52,8 @@ CUSTOM_CSS = """
 }
 """
 
-with gr.Blocks(fill_height=True, title='AGH Chat', css=CUSTOM_CSS) as web_app:
-    web.gui.MainController(backend_service).render_gui()
+with gr.Blocks(fill_height=True, title='AGH Chat', css=CUSTOM_CSS) as web_application:
+    web_app.gui.MainController(backend_service).render_gui()
 
-web_app.launch(server_name=cfg.web_app_host,
-               server_port=cfg.web_app_port)
+web_application.launch(server_name=cfg.web_app_host,
+                       server_port=cfg.web_app_port)

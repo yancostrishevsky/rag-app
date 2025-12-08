@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 import random
-from typing import AsyncGenerator
+from typing import AsyncIterator
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -74,7 +74,7 @@ async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingR
     response = ' '.join(random.sample(mock_words, len(mock_words)))
     response += f'Documents used: {[doc_id for doc_id, _ in request.context_docs]}'
 
-    async def event_generator() -> AsyncGenerator[bytes]:
+    async def event_generator() -> AsyncIterator[bytes]:
         for token in response.replace(' ', ' [split_token]') .split('[split_token]'):
             chunk = {'content': token}
             yield json.dumps(chunk).encode('utf-8')

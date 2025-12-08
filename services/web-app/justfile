@@ -13,7 +13,7 @@ setup-environment:
 
 # Run the Gradio web application with live reloading.
 run-app:
-    uv run gradio main_dev.py --watch-dirs . --demo-name web_app
+    uv run gradio main_dev.py --watch-dirs . --demo-name web_application
 
 # Run the mock backend server.
 run-mock-backend:

@@ -5,8 +5,8 @@ from typing import List
 from typing import Tuple
 
 import gradio as gr
-import web
-from web.backend_communication import ChatHistoryType
+import web_app
+from web_app.backend_communication import ChatHistoryType
 
 
 def _logger() -> logging.Logger:
@@ -31,7 +31,7 @@ class MainController:
     """Renders GUI elements and handles controller-view interactions."""
 
     def __init__(self,
-                 backend_service: web.backend_communication.BackendService):
+                 backend_service: web_app.backend_communication.BackendService):
 
         self._backend_service = backend_service
 
