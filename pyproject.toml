@@ -5,6 +5,7 @@ requires-python=">=3.12"
 
 [tool.mypy]
 disable_error_code = "import-untyped"
+strict = true
 
 [tool.autopep8]
 aggressive = true
