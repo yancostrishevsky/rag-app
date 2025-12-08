@@ -1,6 +1,6 @@
-set -euo pipefail
+#!/bin/bash
 
-USERNAME="${USERNAME:-base}"
+set -euo pipefail
 
 if ! id "${USERNAME}" &>/dev/null; then
   echo "User '${USERNAME}' does not exist. Create it in the Dockerfile before running this script." >&2
