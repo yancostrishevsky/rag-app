@@ -1,13 +1,15 @@
 """Contains GUI related utils."""
 import logging
+from typing import Iterator
 from typing import List
 from typing import Tuple
 
 import gradio as gr
 import web
+from web.backend_communication import ChatHistoryType
 
 
-def _logger():
+def _logger() -> logging.Logger:
     return logging.getLogger('web_app')
 
 
@@ -33,7 +35,7 @@ class MainController:
 
         self._backend_service = backend_service
 
-    def render_gui(self):
+    def render_gui(self) -> None:
         """Renders the UI for application and assigns the necessary callbacks."""
 
         with gr.Row(elem_id='agh_header_row', height='70vh'):
@@ -73,8 +75,9 @@ class MainController:
                 )
 
     def _chat_interface_callback(self,
-                                 user_message,
-                                 history):
+                                 user_message: str,
+                                 history: ChatHistoryType
+                                 ) -> Iterator[Tuple[ChatHistoryType, gr.Markdown]]:
         """Main callback for the chat interface."""
 
         history = history or []

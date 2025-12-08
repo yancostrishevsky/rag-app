@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 import random
+from typing import AsyncGenerator
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -37,7 +38,7 @@ class RequestStreamChatResponse(pydantic.BaseModel):
 
 
 @app.get('/ping')
-async def read_ping():
+async def read_ping() -> Dict[str, str]:
     """Health check endpoint."""
     return {'message': 'Service is running'}
 
@@ -58,7 +59,7 @@ async def collect_context_info(request: RequestCollectContextInfo) -> ResponseCo
 
 
 @app.post('/stream_chat_response')
-async def stream_chat_response(request: RequestStreamChatResponse):
+async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingResponse:
     """Streams chat response for the user query based on the provided context."""
 
     mock_response = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
@@ -73,7 +74,7 @@ async def stream_chat_response(request: RequestStreamChatResponse):
     response = ' '.join(random.sample(mock_words, len(mock_words)))
     response += f'Documents used: {[doc_id for doc_id, _ in request.context_docs]}'
 
-    async def event_generator():
+    async def event_generator() -> AsyncGenerator[bytes]:
         for token in response.replace(' ', ' [split_token]') .split('[split_token]'):
             chunk = {'content': token}
             yield json.dumps(chunk).encode('utf-8')
@@ -83,7 +84,7 @@ async def stream_chat_response(request: RequestStreamChatResponse):
 
 
 @hydra.main(version_base=None, config_path='cfg', config_name='mock_backend')
-def main(cfg: omegaconf.DictConfig):
+def main(cfg: omegaconf.DictConfig) -> None:
     """Sets up the mock backend service."""
 
     logging.info('Starting mock backend with configuration: %s',

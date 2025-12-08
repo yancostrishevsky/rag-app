@@ -3,18 +3,22 @@ import json
 import logging
 from typing import Any
 from typing import Dict
+from typing import Iterator
 from typing import List
 from typing import Tuple
+from typing import TypeAlias
 
 import httpx
-import requests  # type: ignore
+import requests
+
+ChatHistoryType: TypeAlias = List[Dict[str, str]]
 
 
-def _logger():
+def _logger() -> logging.Logger:
     return logging.getLogger('web_app')
 
 
-def _sanitize_chat_history(chat_history: List[Dict[str, str]]):
+def _sanitize_chat_history(chat_history: ChatHistoryType) -> ChatHistoryType:
     """Sanitizes the chat history to ensure it contains only relevant fields."""
     return [
         {
@@ -62,12 +66,14 @@ class BackendService:
         response = requests.post(url, json=payload, timeout=5)
         response.raise_for_status()
 
-        return response.json().get('context_docs', [])
+        response_data = response.json()
+
+        return list((title, content) for title, content in response_data['context_docs'])
 
     def stream_chat_response(self,
                              user_message: str,
-                             chat_history: List[Dict[str, Any]],
-                             context_docs: List[Tuple[str, str]]):
+                             chat_history: ChatHistoryType,
+                             context_docs: List[Tuple[str, str]]) -> Iterator[Dict[str, str]]:
         """Collects LLM response based on the context and streams it.
 
         Args:

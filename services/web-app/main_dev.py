@@ -7,7 +7,7 @@ import omegaconf
 import web
 
 
-def _logger():
+def _logger() -> logging.Logger:
     return logging.getLogger('web_app')
 
 
