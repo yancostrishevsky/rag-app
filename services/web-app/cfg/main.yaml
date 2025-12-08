@@ -1,0 +1,5 @@
+---
+backend_entrypoint_url: http://localhost:8888
+persistent_data_path: /home/appuser/workspace/services/web-app/data/
+web_app_port: 8080
+web_app_host: localhost
