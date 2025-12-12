@@ -1,12 +1,6 @@
 ---
-# ----------------------------------------------------------------------------------
-# This file contains pre-commit hooks containing rules under which the project files
-# should be checked.
-# ----------------------------------------------------------------------------------
-
-exclude: .*/torchkan\.py
 repos:
-  # A set of pre-commit hooks checking various file's features.
+  # Official pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -18,14 +12,10 @@ repos:
       - id: debug-statements
       - id: double-quote-string-fixer
       - id: check-executables-have-shebangs
+      - id: detect-private-key
+      - id: check-case-conflict
 
-  # Checks whether the python code's syntax conforms to the conventions of newer python versions.
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.2
-    hooks:
-      - id: pyupgrade
-
-  # Makes sure the python code's format conforms to the PEP8 style guide.
+  # Ensures Python files are formatted using autopep8 formatter
   - repo: local
     hooks:
       - id: autopep8
@@ -33,18 +23,25 @@ repos:
         entry: autopep8
         language: system
         types: [python]
+        args:
+          - "--in-place"
+          - "--aggressive"
+          - "--exit-code"
+          - "--max-line-length=100"
 
-  # Makes sure the python variables are used according to their types.
-  - repo: local
+  # Ensures python files are written using modern syntax
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
     hooks:
-      - id: mypy
-        name: mypy
-        entry: mypy
-        language: system
-        types: [python]
-        args: [--python-executable, .venv/bin/python]
+      - id: pyupgrade
 
-  # Checks whether the code is accepted by the pylint checker.
+  # Ensures python imports are sorted according to (std, external, own) rule
+  - repo: https://github.com/asottile/reorder-python-imports
+    rev: v3.16.0
+    hooks:
+      - id: reorder-python-imports
+
+  # Ensures python files pass pylint checks
   - repo: local
     hooks:
       - id: pylint
@@ -52,16 +49,16 @@ repos:
         entry: pylint
         language: system
         types: [python]
-        args:
-          - --rcfile=pyproject.toml
+        args: [-rn, -sn]
 
-  # Checks whether the python import statements are properly sorted.
-  - repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.12.0
+  # Performs Python static type check
+  - repo: local
     hooks:
-      - id: reorder-python-imports
-        args:
-          - --application-directories=.:src
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        types: [python]
 
   # Ensures yaml files are formatted
   - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
@@ -69,3 +66,9 @@ repos:
     hooks:
       - id: yamlfmt
         args: [--mapping, '2', --sequence, '4', --offset, '2']
+
+  # Ensures json files are valid. Supports Json with Comments
+  - repo: https://gitlab.com/bmares/check-json5
+    rev: v1.0.0
+    hooks:
+      - id: check-json5

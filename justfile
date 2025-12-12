@@ -13,4 +13,3 @@ run-pre-commit:
 setup-dev:
     uv venv
     uv sync --project . --extra dev
-

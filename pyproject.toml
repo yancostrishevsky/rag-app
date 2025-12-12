@@ -1,0 +1,24 @@
+[project]
+name = "rag-app"
+version = "0.1.0"
+requires-python=">=3.12"
+
+[tool.mypy]
+disable_error_code = "import-untyped"
+strict = true
+
+[tool.autopep8]
+aggressive = true
+max-line-length = 100
+in-place = true
+
+[tool.pylint."messages control"]
+disable = [
+    "fixme",
+    "too-few-public-methods",
+    "too-many-instance-attributes",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-locals",
+    "R0801"
+]

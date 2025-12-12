@@ -1,0 +1,29 @@
+---
+version: '3.9'
+
+services:
+  core-service:
+    build:
+      context: .
+      dockerfile: services/core-service/Dockerfile
+    container_name: core-service
+    ports:
+      - 8001:8000
+    networks:
+      - rag-net
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - 8080:8000
+    depends_on:
+      - core-service
+    networks:
+      - rag-net
+
+networks:
+  rag-net:
+    driver: bridge
