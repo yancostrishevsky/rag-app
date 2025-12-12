@@ -19,28 +19,21 @@ from fastapi.responses import StreamingResponse
 app = FastAPI()
 
 
+@app.get('/ping')
+async def read_ping() -> Dict[str, str]:
+    """Health check endpoint."""
+    return {'message': 'Service is running'}
+
+
 class RequestCollectContextInfo(pydantic.BaseModel):
-    """Request coming from the web app to collect context information."""
+    """Request from web-app to context-retriever to collect context documents."""
     user_message: str
     chat_history: List[Dict[str, str]]
 
 
 class ResponseCollectContextInfo(pydantic.BaseModel):
-    """Response sent back to the web app with collected context information."""
+    """Response from context-retriever to web-app with collected context docs."""
     context_docs: List[Tuple[str, str]]
-
-
-class RequestStreamChatResponse(pydantic.BaseModel):
-    """Request coming from the web app after collecting the context to stream chat responses."""
-    user_message: str
-    chat_history: List[Dict[str, str]]
-    context_docs: List[Tuple[str, str]]
-
-
-@app.get('/ping')
-async def read_ping() -> Dict[str, str]:
-    """Health check endpoint."""
-    return {'message': 'Service is running'}
 
 
 @app.post('/collect_context_info')
@@ -55,7 +48,14 @@ async def collect_context_info(request: RequestCollectContextInfo) -> ResponseCo
         ('doc3', 'This is the content of document 3.'),
     ]
 
-    return ResponseCollectContextInfo(context_docs=mock_docs)
+    return ResponseCollectContextInfo(context_docs=random.sample(mock_docs, 2))
+
+
+class RequestStreamChatResponse(pydantic.BaseModel):
+    """Request from web-app to llm-proxy to stream chat responses."""
+    user_message: str
+    chat_history: List[Dict[str, str]]
+    context_docs: List[Tuple[str, str]]
 
 
 @app.post('/stream_chat_response')
@@ -87,7 +87,7 @@ async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingR
 def main(cfg: omegaconf.DictConfig) -> None:
     """Sets up the mock backend service."""
 
-    logging.info('Starting mock backend with configuration: %s',
+    logging.info('Starting mock backend with configuration:\n%s',
                  omegaconf.OmegaConf.to_yaml(cfg))
 
     uvicorn.run(

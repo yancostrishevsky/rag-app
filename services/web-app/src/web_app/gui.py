@@ -5,8 +5,9 @@ from typing import List
 from typing import Tuple
 
 import gradio as gr
-import web_app
-from web_app.backend_communication import ChatHistoryType
+
+from web_app.backend.utils import ChatHistoryType
+from web_app.backend import (context_retriever, llm_proxy)
 
 
 def _logger() -> logging.Logger:
@@ -31,9 +32,11 @@ class MainController:
     """Renders GUI elements and handles controller-view interactions."""
 
     def __init__(self,
-                 backend_service: web_app.backend_communication.BackendService):
+                 context_retriever_service: context_retriever.ContextRetrieverService,
+                 llm_proxy_service: llm_proxy.LLMProxyService):
 
-        self._backend_service = backend_service
+        self._context_retriever_service = context_retriever_service
+        self._llm_proxy_service = llm_proxy_service
 
     def render_gui(self) -> None:
         """Renders the UI for application and assigns the necessary callbacks."""
@@ -83,7 +86,7 @@ class MainController:
         history = history or []
 
         try:
-            context_docs = self._backend_service.collect_context_info(
+            context_docs = self._context_retriever_service.collect_context_info(
                 user_message=user_message,
                 chat_history=history
             )
@@ -93,7 +96,7 @@ class MainController:
 
         context_docs_repr = _create_retrieved_docs_representation(context_docs)
 
-        chat_response = self._backend_service.stream_chat_response(
+        chat_response = self._llm_proxy_service.stream_chat_response(
             user_message=user_message,
             chat_history=history,
             context_docs=context_docs
@@ -102,8 +105,7 @@ class MainController:
         full_text_response = ''
         for chunk in chat_response:
 
-            token = chunk.get('content', '')
-            full_text_response += token
+            full_text_response += chunk['content']
 
             chat_message = [{
                 'role': 'assistant',

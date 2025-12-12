@@ -1,10 +1,14 @@
 """Contains the main entrypoint for the web application."""
 import logging.config
+import os
+from datetime import datetime
 
 import gradio as gr
 import hydra
 import omegaconf
-import web_app
+
+from web_app.backend import (context_retriever, llm_proxy)
+from web_app import gui
 
 
 def _logger() -> logging.Logger:
@@ -14,9 +18,10 @@ def _logger() -> logging.Logger:
 with hydra.initialize(version_base=None, config_path='cfg'):
     cfg = hydra.compose(config_name='main')
 
-    _logger().info('Starting web application with configuration: %s',
+    _logger().info('Starting web application with configuration:\n%s',
                    omegaconf.OmegaConf.to_yaml(cfg))
 
+os.makedirs(os.path.join(cfg.persist_data_path, 'log'), exist_ok=True)
 
 logging.config.dictConfig({
     'version': 1,
@@ -41,8 +46,12 @@ logging.config.dictConfig({
     }
 })
 
-backend_service = web_app.backend_communication.BackendService(
-    backend_url=cfg.backend_entrypoint_url
+context_retriever_service = context_retriever.ContextRetrieverService(
+    cfg.context_retriever_url
+)
+
+llm_proxy_service = llm_proxy.LLMProxyService(
+    cfg.llm_proxy_url
 )
 
 CUSTOM_CSS = """
@@ -53,7 +62,7 @@ CUSTOM_CSS = """
 """
 
 with gr.Blocks(fill_height=True, title='AGH Chat', css=CUSTOM_CSS) as web_application:
-    web_app.gui.MainController(backend_service).render_gui()
+    gui.MainController(context_retriever_service, llm_proxy_service).render_gui()
 
 web_application.launch(server_name=cfg.web_app_host,
                        server_port=cfg.web_app_port)
