@@ -1,0 +1,5 @@
+---
+context_retriever_url: http://localhost:8888
+llm_proxy_url: http://localhost:8888
+web_app_port: 8080
+web_app_host: localhost

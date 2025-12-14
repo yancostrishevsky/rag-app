@@ -1,3 +1,3 @@
 """Package init file."""
-from . import backend_communication
+from . import backend
 from . import gui
