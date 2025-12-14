@@ -12,8 +12,12 @@ setup-environment:
     uv pip install -e .[dev]
 
 # Run the Gradio web application with live reloading.
-run-app:
+run-app-dev:
     uv run gradio main_dev.py --watch-dirs . --demo-name web_application
+
+# Run the web application.
+run-app:
+    uv run python main.py
 
 # Run the mock backend server.
 run-mock-backend:

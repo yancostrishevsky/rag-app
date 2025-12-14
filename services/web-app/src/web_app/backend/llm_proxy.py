@@ -22,6 +22,9 @@ class LLMProxyService:
 
         self._llm_proxy_url = llm_proxy_url
 
+        _logger().debug('Created service for llm-proxy with url: %s',
+                        llm_proxy_url)
+
     def stream_chat_response(self,
                              user_message: str,
                              chat_history: utils.ChatHistory,

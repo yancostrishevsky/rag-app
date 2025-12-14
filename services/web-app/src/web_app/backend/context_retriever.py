@@ -21,6 +21,9 @@ class ContextRetrieverService:
 
         self._context_retriever_url = context_retriever_url
 
+        _logger().debug('Created service for context-retriever with url: %s',
+                        context_retriever_url)
+
     def collect_context_info(self,
                              user_message: str,
                              chat_history: utils.ChatHistory) -> List[utils.ContextDocument]:
