@@ -1,12 +1,8 @@
 """Contains implementation of service that communicates with the context retriever module."""
-
 import logging
-from typing import Any
-from typing import Dict
 from typing import List
-from typing import Tuple
-import requests
 
+import requests
 from web_app.backend import utils
 
 

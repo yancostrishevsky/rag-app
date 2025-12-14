@@ -6,9 +6,10 @@ from datetime import datetime
 import gradio as gr
 import hydra
 import omegaconf
-
-from web_app.backend import (context_retriever, llm_proxy)
-from web_app.gui import (main_controller, utils as gui_utils)
+from web_app.backend import context_retriever
+from web_app.backend import llm_proxy
+from web_app.gui import main_controller
+from web_app.gui import utils as gui_utils
 
 
 def _logger() -> logging.Logger:
@@ -16,7 +17,7 @@ def _logger() -> logging.Logger:
 
 
 @hydra.main(version_base=None, config_path='cfg', config_name='main')
-def main(cfg: omegaconf.DictConfig):
+def main(cfg: omegaconf.DictConfig) -> None:
     """Initializes and serves the web app."""
 
     os.makedirs(os.path.join(cfg.persist_data_path, 'log'), exist_ok=True)
@@ -45,15 +46,15 @@ def main(cfg: omegaconf.DictConfig):
                 'formatter': 'default'
             },
             'file': {
-                "class": "logging.handlers.RotatingFileHandler",
-                "level": "DEBUG",
-                "formatter": "default",
-                "filename": os.path.join(cfg.persist_data_path,
+                'class': 'logging.handlers.RotatingFileHandler',
+                'level': 'DEBUG',
+                'formatter': 'default',
+                'filename': os.path.join(cfg.persist_data_path,
                                          'log',
                                          f'{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.log'),
-                "maxBytes": 5_000_000,
-                "backupCount": 5,
-                "encoding": "utf-8",
+                'maxBytes': 5_000_000,
+                'backupCount': 5,
+                'encoding': 'utf-8',
             }
         },
         'formatters': {

@@ -1,16 +1,16 @@
 """Contains GUI related utils."""
 import logging
+from typing import Any
+from typing import Dict
 from typing import Iterator
 from typing import List
-from typing import Tuple
 from typing import Optional
-from typing import Dict
-from typing import Any
+from typing import Tuple
 
 import gradio as gr
-
+from web_app.backend import context_retriever
+from web_app.backend import llm_proxy
 from web_app.backend import utils
-from web_app.backend import (context_retriever, llm_proxy)
 
 
 def _logger() -> logging.Logger:
@@ -119,8 +119,8 @@ class MainController:
 
     def _stream_llm_response(self,
                              user_message: str,
-                             chat_history=utils.ChatHistory,
-                             context_docs=List[utils.ContextDocument]) -> Iterator[Dict[str, Any]]:
+                             chat_history: utils.ChatHistory,
+                             context_docs: List[utils.ContextDocument]) -> Iterator[Dict[str, Any]]:
         """Yields concatenated chunks retrieved from the llm."""
 
         chat_response = self._llm_proxy_service.stream_chat_response(

@@ -1,13 +1,11 @@
 """Contains service that communicates with the llm-proxy module."""
-
-from typing import Tuple
-from typing import Dict
-from typing import List
-from typing import Iterator
-import logging
-import httpx
 import json
+import logging
+from typing import Dict
+from typing import Iterator
+from typing import List
 
+import httpx
 from web_app.backend import utils
 
 

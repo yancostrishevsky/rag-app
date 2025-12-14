@@ -1,10 +1,9 @@
 """Contains utilities used by the backend services."""
-
-from typing import TypeAlias
+import dataclasses
+from typing import Any
 from typing import Dict
 from typing import List
-from typing import Any
-import dataclasses
+from typing import TypeAlias
 
 
 @dataclasses.dataclass

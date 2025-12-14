@@ -1,13 +1,13 @@
 """Contains the main entrypoint for the web application."""
 import logging.config
-import os
 
 import gradio as gr
 import hydra
 import omegaconf
-
-from web_app.backend import (context_retriever, llm_proxy)
-from web_app.gui import (main_controller, utils as gui_utils)
+from web_app.backend import context_retriever
+from web_app.backend import llm_proxy
+from web_app.gui import main_controller
+from web_app.gui import utils as gui_utils
 
 
 def _logger() -> logging.Logger:
