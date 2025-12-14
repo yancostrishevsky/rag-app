@@ -15,7 +15,7 @@ def _logger() -> logging.Logger:
 
 
 with hydra.initialize(version_base=None, config_path='cfg'):
-    cfg = hydra.compose(config_name='main')
+    cfg = hydra.compose(config_name='main_dev')
 
     _logger().info('Starting web application with configuration:\n%s',
                    omegaconf.OmegaConf.to_yaml(cfg))
