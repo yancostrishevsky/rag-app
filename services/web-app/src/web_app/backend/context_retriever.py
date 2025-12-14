@@ -23,7 +23,7 @@ class ContextRetrieverService:
 
     def collect_context_info(self,
                              user_message: str,
-                             chat_history: List[Dict[str, Any]]) -> List[Tuple[str, str]]:
+                             chat_history: utils.ChatHistory) -> List[utils.ContextDocument]:
         """Collects context information based on the user's message and chat history.
 
         Args:
@@ -32,20 +32,15 @@ class ContextRetrieverService:
 
         Raises:
             requests.HTTPError: If the request to the backend fails.
-
-        Returns:
-            A list of tuples where each tuple contains a document title and its content.
         """
 
         _logger().debug('Collecting context info with user_message: %s and chat_history: %s',
                         user_message, chat_history)
 
-        chat_history = utils.sanitize_chat_history(chat_history)
-
         url = f"{self._context_retriever_url}/collect_context_info"
         payload = {
             'user_message': user_message,
-            'chat_history': chat_history
+            'chat_history': utils.chat_history_to_payload(chat_history)
         }
 
         response = requests.post(url, json=payload, timeout=5)
@@ -53,4 +48,5 @@ class ContextRetrieverService:
 
         response_data = response.json()
 
-        return list((title, content) for title, content in response_data['context_docs'])
+        return [utils.ContextDocument(doc['title'], doc['content'])
+                for doc in response_data['context_docs']]

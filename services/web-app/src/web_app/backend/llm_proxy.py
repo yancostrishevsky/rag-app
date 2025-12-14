@@ -24,8 +24,8 @@ class LLMProxyService:
 
     def stream_chat_response(self,
                              user_message: str,
-                             chat_history: utils.ChatHistoryType,
-                             context_docs: List[Tuple[str, str]]) -> Iterator[Dict[str, str]]:
+                             chat_history: utils.ChatHistory,
+                             context_docs: List[utils.ContextDocument]) -> Iterator[Dict[str, str]]:
         """Collects LLM response based on the context and streams it.
 
         Args:
@@ -34,21 +34,20 @@ class LLMProxyService:
             context_docs: The documents retrieved to provide additional context.
 
         Returns:
-            A generator that yields chunks of the chat response as they are received.
+            A generator that yields chunks of the chat response as they are received. Each chunk
+                contain the 'content' field.
         """
 
         _logger().debug(('Streaming chat response with user_message: %s, ' +
                          'chat_history: %s, context_docs: %s'),
                         user_message, chat_history, context_docs)
 
-        chat_history = utils.sanitize_chat_history(chat_history)
-
         url = f"{self._llm_proxy_url}/stream_chat_response"
 
         payload = {
             'user_message': user_message,
-            'chat_history': chat_history,
-            'context_docs': context_docs
+            'chat_history': utils.chat_history_to_payload(chat_history),
+            'context_docs': utils.context_docs_to_payload(context_docs)
         }
 
         with httpx.stream('POST', url, json=payload, timeout=5) as stream:

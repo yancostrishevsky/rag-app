@@ -7,6 +7,7 @@ from typing import AsyncIterator
 from typing import Dict
 from typing import List
 from typing import Tuple
+from typing import Any
 
 import hydra
 import omegaconf
@@ -28,12 +29,12 @@ async def read_ping() -> Dict[str, str]:
 class RequestCollectContextInfo(pydantic.BaseModel):
     """Request from web-app to context-retriever to collect context documents."""
     user_message: str
-    chat_history: List[Dict[str, str]]
+    chat_history: List[Dict[str, Any]]
 
 
 class ResponseCollectContextInfo(pydantic.BaseModel):
     """Response from context-retriever to web-app with collected context docs."""
-    context_docs: List[Tuple[str, str]]
+    context_docs: List[Dict[str, Any]]
 
 
 @app.post('/collect_context_info')
@@ -43,9 +44,9 @@ async def collect_context_info(request: RequestCollectContextInfo) -> ResponseCo
     logging.info('/collect_context_info - Message: %s', request.user_message)
 
     mock_docs = [
-        ('doc1', 'This is the content of document 1.'),
-        ('doc2', 'This is the content of document 2.'),
-        ('doc3', 'This is the content of document 3.'),
+        {'title': 'doc1', 'content': 'This is the content of document 1.'},
+        {'title': 'doc2', 'content': 'This is the content of document 2.'},
+        {'title': 'doc3', 'content': 'This is the content of document 3.'},
     ]
 
     return ResponseCollectContextInfo(context_docs=random.sample(mock_docs, 2))
@@ -54,8 +55,8 @@ async def collect_context_info(request: RequestCollectContextInfo) -> ResponseCo
 class RequestStreamChatResponse(pydantic.BaseModel):
     """Request from web-app to llm-proxy to stream chat responses."""
     user_message: str
-    chat_history: List[Dict[str, str]]
-    context_docs: List[Tuple[str, str]]
+    chat_history: List[Dict[str, Any]]
+    context_docs: List[Dict[str, Any]]
 
 
 @app.post('/stream_chat_response')
@@ -72,7 +73,7 @@ async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingR
     mock_words = mock_response.split()
 
     response = ' '.join(random.sample(mock_words, len(mock_words)))
-    response += f'Documents used: {[doc_id for doc_id, _ in request.context_docs]}'
+    response += f'Documents used: {[doc['title'] for doc in request.context_docs]}'
 
     async def event_generator() -> AsyncIterator[bytes]:
         for token in response.replace(' ', ' [split_token]') .split('[split_token]'):

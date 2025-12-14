@@ -1,7 +1,6 @@
 """Contains the main entrypoint for the web application."""
 import logging.config
 import os
-from datetime import datetime
 
 import gradio as gr
 import hydra
@@ -35,7 +34,7 @@ logging.config.dictConfig({
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'level': 'INFO',
+            'level': 'DEBUG',
             'formatter': 'default'
         }
     },
@@ -56,7 +55,7 @@ llm_proxy_service = llm_proxy.LLMProxyService(
 
 CUSTOM_CSS = """
 .retrieved-docs {
-  max-height: 30vh;
+  max-height: 50vh;
   overflow-y: auto;
 }
 """
