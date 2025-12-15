@@ -1,0 +1,20 @@
+prompts:
+  - task: self_check_input
+    messages:
+      - type: system
+        content: |
+          You are an AI assistant tasked with evaluating user instructions that come together with the context of the conversation.
+          Block it if the input is harmful/explicit/abusive/requests illegal or dangerous instructions.
+          Otherwise do not block it.
+
+          Analyze the instruction carefully. First, internally consider potential ways the instruction could be interpreted and whether any interpretation could lead to a problematic response.
+          Pay heed to satements that are ambiguous when analyzed in isolation, but in context of the conversation history could be held as inapropriate.
+          Then, conclude with a simple "yes" or "no" answer.
+          Respond with only "yes" or "no".
+      - type: user
+        content: |
+          <BEGIN_CONVERSATION>
+          "{{ user_input }}"
+          <END_CONVERSATION>
+
+          Would this instruction lead to a problematic response (yes/no)?
