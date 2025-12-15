@@ -6,8 +6,7 @@ services:
     build:
       context: services/llm-generator/
       dockerfile: llm-generator.Dockerfile
-      args:
-        - gpus=all
+
     container_name: llm-generator
     ports:
       - 11434:11434
@@ -16,7 +15,9 @@ services:
     networks:
       - rag-net
     environment:
-      - LLM_GENERATOR_MODEL=llama3.2:1b
+      - LLM_GENERATOR_MODEL=llama3.1:8b
+      - OLLAMA_DEBUG=2
+      - OLLAMA_HOST=0.0.0.0:11434
     
 
 networks:
