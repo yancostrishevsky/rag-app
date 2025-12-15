@@ -16,14 +16,13 @@ import pydantic
 import fastapi
 from fastapi.responses import StreamingResponse
 
-from llm_proxy import (guardrails_service, chat_llm_service)
+from llm_proxy import chat_llm_service
 
 
 def _logger() -> logging.Logger:
     return logging.getLogger()
 
 
-guard_service: guardrails_service.GuardrailsService | None = None  # pylint: disable=invalid-name
 llm_service: chat_llm_service.ChatLLMService | None = None  # pylint: disable=invalid-name
 
 
@@ -33,14 +32,10 @@ async def lifespan(_):  # type: ignore
 
     cfg = omegaconf.OmegaConf.load('cfg/main.yaml')
 
-    global guard_service, llm_service  # pylint: disable=global-statement
+    global llm_service  # pylint: disable=global-statement
 
-    guard_service = guardrails_service.GuardrailsService(
-        config_path=cfg.guardrails_cfg_path
-    )
     llm_service = chat_llm_service.ChatLLMService(
-        ollama_model=cfg.chat_llm_cfg.model,
-        ollama_url=cfg.chat_llm_cfg.url
+        guardrails_cfg_path=cfg.guardrails_cfg_path
     )
 
     yield
@@ -71,29 +66,6 @@ async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingR
     return StreamingResponse(llm_service.stream_chat_response(request.user_message,
                                                               chat_history=request.chat_history),
                              media_type='application/json')
-
-
-class RequestShouldAllowQuery(pydantic.BaseModel):
-    """Request to tell whether a given query is eligible for processing."""
-    user_message: str
-    chat_history: List[Dict[str, Any]]
-
-
-class ResponseShouldAllowQuery(pydantic.BaseModel):
-    """Responds with the information whether a given query should be processed."""
-    allowed: bool
-
-
-@app.post('/should_allow_query')
-async def should_allow_query(request: RequestShouldAllowQuery) -> ResponseShouldAllowQuery:
-    """Tells whether a given user query passes the guardrails."""
-
-    assert guard_service is not None
-
-    is_allowed = await guard_service.should_process_query(query=request.user_message,
-                                                          chat_history=request.chat_history)
-
-    return ResponseShouldAllowQuery(allowed=is_allowed)
 
 
 @hydra.main(version_base=None, config_path='cfg', config_name='main')
@@ -148,16 +120,13 @@ def main(cfg: omegaconf.DictConfig) -> None:
         }
     })
 
-    # n_workers = (multiprocessing.cpu_count() * 2) + 1
-    n_workers = 1
-
     _logger().info('Starting server on %s:%d with %d workers.',
-                   cfg.server_host, cfg.server_port, n_workers)
+                   cfg.server_host, cfg.server_port, cfg.n_server_workers)
 
     uvicorn.run('main:app',
                 host=cfg.server_host,
                 port=cfg.server_port,
-                workers=n_workers,
+                workers=cfg.n_server_workers,
                 log_level='info',
                 access_log=True,
                 limit_concurrency=1000,

@@ -7,7 +7,7 @@ from typing import Any
 from typing import AsyncIterator
 import json
 
-import ollama
+import nemoguardrails
 
 
 def _logger() -> logging.Logger:
@@ -18,29 +18,30 @@ class ChatLLMService:
     """Establishes connection with self-hosted LLM and handles requests to it."""
 
     def __init__(self,
-                 ollama_model: str,
-                 ollama_url: str):
+                 guardrails_cfg_path: str):
 
-        self._ollama_model = ollama_model
-        self._ollama_url = ollama_url
+        config = nemoguardrails.RailsConfig.from_path(guardrails_cfg_path)
 
-        self._client = ollama.AsyncClient(ollama_url)
+        self._rails_client = nemoguardrails.LLMRails(config)
 
-        _logger().debug('Created ChatLLMService for model: %s and url: %s.',
-                        ollama_model, ollama_url)
+        _logger().debug('Created GuardrailsService from config: %s.', config)
 
     async def stream_chat_response(self,
                                    user_query: str,
                                    chat_history: List[Dict[str, Any]]) -> AsyncIterator[bytes]:
-        """Streams, chunk by chunk, LLM response for a given query and chat history."""
+        """Streams, chunk by chunk, LLM response for a given query and chat history.
+
+        The input is checkes according to the guardrails specification.
+        """
+
+        _logger().debug('Streaming llm response for query \'%s\' and conversation %s...',
+                        user_query, chat_history)
 
         messages = chat_history + [
             {'role': 'user', 'content': user_query}
         ]
 
-        async for chunk in await self._client.chat(model=self._ollama_model,
-                                                   messages=messages,
-                                                   stream=True):
+        async for chunk in self._rails_client.stream_async(messages=messages):
 
             chunk_struct = {'content': chunk}
             yield json.dumps(chunk_struct).encode('utf-8')
