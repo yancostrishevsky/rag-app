@@ -2,27 +2,22 @@
 version: '3.9'
 
 services:
-  core-service:
+  llm-generator:
     build:
-      context: .
-      dockerfile: services/core-service/Dockerfile
-    container_name: core-service
+      context: services/llm-generator/
+      dockerfile: llm-generator.Dockerfile
+      args:
+        - gpus=all
+    container_name: llm-generator
     ports:
-      - 8001:8000
+      - 11434:11434
+    volumes:
+      - ./persist_dir/llm-generator:/root/.ollama
     networks:
       - rag-net
-
-  api-gateway:
-    build:
-      context: .
-      dockerfile: services/api-gateway/Dockerfile
-    container_name: api-gateway
-    ports:
-      - 8080:8000
-    depends_on:
-      - core-service
-    networks:
-      - rag-net
+    environment:
+      - LLM_GENERATOR_MODEL=llama3.2:1b
+    
 
 networks:
   rag-net:
