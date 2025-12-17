@@ -65,11 +65,7 @@ async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingR
                              media_type='application/json')
 
 
-@hydra.main(version_base=None, config_path='cfg', config_name='main')
-def main(cfg: omegaconf.DictConfig) -> None:
-    """Initializes and serves the web app."""
-
-    os.makedirs(os.path.join(cfg.persist_data_path, 'log'), exist_ok=True)
+def _configure_logging(script_cfg: omegaconf.DictConfig) -> None:
 
     logging.config.dictConfig({
         'version': 1,
@@ -102,7 +98,7 @@ def main(cfg: omegaconf.DictConfig) -> None:
                 'class': 'logging.handlers.RotatingFileHandler',
                 'level': 'DEBUG',
                 'formatter': 'default',
-                'filename': os.path.join(cfg.persist_data_path,
+                'filename': os.path.join(script_cfg.persist_data_path,
                                          'log',
                                          f'{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.log'),
                 'maxBytes': 5_000_000,
@@ -116,6 +112,15 @@ def main(cfg: omegaconf.DictConfig) -> None:
             }
         }
     })
+
+
+@hydra.main(version_base=None, config_path='cfg', config_name='main')
+def main(cfg: omegaconf.DictConfig) -> None:
+    """Initializes and serves the web app."""
+
+    os.makedirs(os.path.join(cfg.persist_data_path, 'log'), exist_ok=True)
+
+    _configure_logging(cfg)
 
     _logger().info('Starting server on %s:%d with %d workers.',
                    cfg.server_host, cfg.server_port, cfg.n_server_workers)
