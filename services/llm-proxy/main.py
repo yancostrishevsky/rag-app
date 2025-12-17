@@ -1,21 +1,18 @@
 """"Starts the backend server for the entrypoint service."""
 import logging
-import multiprocessing
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
-from contextlib import asynccontextmanager
 
-
+import fastapi
 import hydra
 import omegaconf
-import uvicorn
 import pydantic
-import fastapi
+import uvicorn
 from fastapi.responses import StreamingResponse
-
 from llm_proxy import chat_llm_service
 
 

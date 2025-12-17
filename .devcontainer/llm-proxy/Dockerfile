@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive

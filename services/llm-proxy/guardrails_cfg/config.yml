@@ -1,11 +1,11 @@
-
+---
 models:
   - type: self_check_input
     engine: ollama
     model: llama3.2:1b
     parameters:
       base_url: http://localhost:11435
-  
+
   - type: main
     engine: ollama
     model: llama3.2:1b

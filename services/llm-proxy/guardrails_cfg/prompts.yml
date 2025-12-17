@@ -1,3 +1,4 @@
+---
 prompts:
   - task: self_check_input
     messages:

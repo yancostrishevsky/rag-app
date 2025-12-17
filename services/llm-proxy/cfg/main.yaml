@@ -1,3 +1,4 @@
+---
 persist_data_path: data/
 guardrails_cfg_path: guardrails_cfg/
 server_host: 0.0.0.0
