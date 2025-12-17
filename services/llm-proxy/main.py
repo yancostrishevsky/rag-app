@@ -17,7 +17,7 @@ from llm_proxy import chat_llm_service
 
 
 def _logger() -> logging.Logger:
-    return logging.getLogger()
+    return logging.getLogger('llm_proxy')
 
 
 llm_service: chat_llm_service.ChatLLMService | None = None  # pylint: disable=invalid-name
@@ -71,20 +71,12 @@ def _configure_logging(script_cfg: omegaconf.DictConfig) -> None:
         'version': 1,
         'loggers': {
             'root': {
-                'level': 'NOTSET',
+                'level': 'WARNING',
+                'handlers': ['console', 'file']
+            },
+            'llm_proxy': {
+                'level': 'DEBUG',
                 'handlers': ['console', 'file'],
-                'propagate': True
-            },
-            'httpx': {
-                'level': 'WARNING',
-                'propagate': False
-            },
-            'httpcore': {
-                'level': 'WARNING',
-                'propagate': False
-            },
-            'nemoguardrails': {
-                'level': 'WARNING',
                 'propagate': False
             }
         },
