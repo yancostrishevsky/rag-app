@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
+import json
+import sys
 
 import fastapi
 import hydra
@@ -27,8 +29,17 @@ llm_service: chat_llm_service.ChatLLMService | None = None  # pylint: disable=in
 async def lifespan(_):  # type: ignore
     """Sets up global contexts used by the server workers."""
 
-    cfg = omegaconf.OmegaConf.load('cfg/main.yaml')
+    cfg_serialized = os.environ.get('LLM_PROXY_SERVER_CFG', None)
 
+    if cfg_serialized is None:
+        _logger().critical('Failed to load llm-proxy server config from environment variable.')
+        sys.exit(1)
+
+    cfg = omegaconf.OmegaConf.create(json.loads(cfg_serialized))
+
+    # The llm_service is designed to be used by the endpoint handlers as a global service. It is
+    # not assigned in the `main` function because the uvicorn workers don't call it, as opposed to
+    # the `lifespan` callback.
     global llm_service  # pylint: disable=global-statement
 
     llm_service = chat_llm_service.ChatLLMService(
@@ -116,6 +127,9 @@ def main(cfg: omegaconf.DictConfig) -> None:
 
     _logger().info('Starting server on %s:%d with %d workers.',
                    cfg.server_host, cfg.server_port, cfg.n_server_workers)
+
+    cfg_serialized = json.dumps(omegaconf.OmegaConf.to_container(cfg))
+    os.environ['LLM_PROXY_SERVER_CFG'] = cfg_serialized
 
     uvicorn.run('main:app',
                 host=cfg.server_host,
