@@ -18,6 +18,23 @@ services:
       - LLM_GENERATOR_MODEL=llama3.1:8b
       - OLLAMA_DEBUG=2
       - OLLAMA_HOST=0.0.0.0:11434
+
+  guard-llm:
+    build:
+      context: services/llm-endpoint/
+      dockerfile: llm-endpoint.Dockerfile
+
+    container_name: guard-llm
+    ports:
+      - 11435:11435
+    volumes:
+      - ./persist_dir/guard-llm:/root/.ollama
+    networks:
+      - rag-net
+    environment:
+      - LLM_GENERATOR_MODEL=llama-guard3:1b
+      - OLLAMA_DEBUG=2
+      - OLLAMA_HOST=0.0.0.0:11435
     
 
 networks:
