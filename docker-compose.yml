@@ -2,16 +2,16 @@
 version: '3.9'
 
 services:
-  llm-generator:
+  main-llm-responder:
     build:
-      context: services/llm-generator/
-      dockerfile: llm-generator.Dockerfile
+      context: services/llm-endpoint/
+      dockerfile: llm-endpoint.Dockerfile
 
-    container_name: llm-generator
+    container_name: main-llm-responder
     ports:
       - 11434:11434
     volumes:
-      - ./persist_dir/llm-generator:/root/.ollama
+      - ./persist_dir/main-llm-responder:/root/.ollama
     networks:
       - rag-net
     environment:
