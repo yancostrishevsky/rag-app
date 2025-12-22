@@ -17,10 +17,12 @@ class ChatLLMService:
     """Establishes connection with self-hosted LLM and handles requests to it."""
 
     def __init__(self,
-                 guardrails_cfg_path: str):
+                 guardrails_cfg_path: str,
+                 used_llm_rails: List[str]):
+
+        self._used_llm_rails = used_llm_rails
 
         config = nemoguardrails.RailsConfig.from_path(guardrails_cfg_path)
-
         self._rails_client = nemoguardrails.LLMRails(config)
 
         _logger().debug('Created GuardrailsService from config: %s.', config)
@@ -40,7 +42,9 @@ class ChatLLMService:
             {'role': 'user', 'content': user_query}
         ]
 
-        async for chunk in self._rails_client.stream_async(messages=messages):
+        async for chunk in self._rails_client.stream_async(
+                messages=messages,
+                options={'rails': self._used_llm_rails}):
 
             chunk_struct = {'content': chunk}
             yield json.dumps(chunk_struct).encode('utf-8')

@@ -43,7 +43,8 @@ async def lifespan(_):  # type: ignore
     global llm_service  # pylint: disable=global-statement
 
     llm_service = chat_llm_service.ChatLLMService(
-        guardrails_cfg_path=cfg.guardrails_cfg_path
+        guardrails_cfg_path=cfg.guardrails_cfg_path,
+        used_llm_rails=cfg.llm_rails_used
     )
 
     yield
@@ -120,6 +121,8 @@ def _configure_logging(script_cfg: omegaconf.DictConfig) -> None:
 @hydra.main(version_base=None, config_path='cfg', config_name='main')
 def main(cfg: omegaconf.DictConfig) -> None:
     """Initializes and serves the web app."""
+
+    _logger().info('Script configuration:\n%s', omegaconf.OmegaConf.to_yaml(cfg))
 
     os.makedirs(os.path.join(cfg.persist_data_path, 'log'), exist_ok=True)
 

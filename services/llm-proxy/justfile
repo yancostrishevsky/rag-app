@@ -11,8 +11,8 @@ setup-environment:
     uv venv
     uv pip install -e .[dev]
 
-run-server:
-    uv run python main.py
+run-server *args:
+    uv run python main.py "$@"
 
 # Runs static checks using global pre-commit configuration.
 run-precommit:
