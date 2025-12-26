@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vector_store_service"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.115.12",
+    "uvicorn==0.34.3"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pylint>=4.0.4",
+    "autopep8>=2.3.2",
+    "mypy>=1.19.0",
+    "pre-commit>=4.5.0"
+]
+
+[project.scripts]
+vector-store-service = "vector_store_service.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

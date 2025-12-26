@@ -2,11 +2,11 @@
 version: '3.9'
 
 services:
-  core-service:
+  vector-store-service:
     build:
       context: .
-      dockerfile: services/core-service/Dockerfile
-    container_name: core-service
+      dockerfile: services/vector-store-service/Dockerfile
+    container_name: vector-store-service
     ports:
       - 8001:8000
     networks:
@@ -20,7 +20,7 @@ services:
     ports:
       - 8080:8000
     depends_on:
-      - core-service
+      - vector-store-service
     networks:
       - rag-net
 
