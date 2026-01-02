@@ -1,18 +1,22 @@
 ---
 models:
-  - type: self_check_input
-    engine: ollama
-    model: llama3.2:1b
-    parameters:
-      base_url: http://localhost:11435
-
   - type: main
     engine: ollama
-    model: llama3.2:1b
+    model: llama3.1:8b
+    parameters:
+      base_url: http://localhost:11434
+
+  - type: chat_conversation_check
+    engine: ollama
+    model: llama3.1:8b
     parameters:
       base_url: http://localhost:11435
+      raw: True
 
 rails:
   input:
     flows:
-      - self check input
+      - chat conversation check
+
+actions:
+  module: actions

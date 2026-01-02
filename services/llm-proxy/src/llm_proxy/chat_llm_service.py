@@ -41,7 +41,34 @@ class ChatLLMService:
 
         async for chunk in self._rails_client.stream_async(
                 messages=messages,
-                options={'rails': self._used_llm_rails}):
+                options={'log': {'activated_rails': True},
+                         'llm_output': True}):
+
+            if self._is_chunk_error(chunk):
+                yield json.dumps({'error': self._get_error_message(chunk)}).encode('utf-8')
+                return
 
             chunk_struct = {'content': chunk}
+
             yield json.dumps(chunk_struct).encode('utf-8')
+
+    def _is_chunk_error(self, chunk: str) -> bool:
+        """Tells whether the given chunk indicates an error.
+
+        An error chunk does not contain the expected vocabulary and indicates that either
+        the guardrails blocked the response or the LLM call failed.
+        """
+
+        return chunk in ('<input_rails_violation>', '<llm_call_error>')
+
+    def _get_error_message(self, chunk: str) -> str:
+        """Returns human-readable error message for the given error chunk."""
+
+        if chunk == '<input_rails_violation>':
+            return 'The input was blocked by safety guardrails.'
+
+        if chunk == '<llm_call_error>':
+            return 'The model call failed.'
+
+        _logger().error('Unknown error chunk: %s', chunk)
+        return 'An unknown error occurred.'
