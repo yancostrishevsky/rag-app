@@ -43,8 +43,7 @@ async def lifespan(_):  # type: ignore
     global llm_service  # pylint: disable=global-statement
 
     llm_service = chat_llm_service.ChatLLMService(
-        guardrails_cfg_path=cfg.guardrails_cfg_path,
-        used_llm_rails=cfg.llm_rails_used
+        guardrails_cfg_path=cfg.guardrails_cfg_path
     )
 
     yield

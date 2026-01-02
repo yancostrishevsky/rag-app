@@ -17,10 +17,7 @@ class ChatLLMService:
     """Establishes connection with self-hosted LLM and handles requests to it."""
 
     def __init__(self,
-                 guardrails_cfg_path: str,
-                 used_llm_rails: List[str]):
-
-        self._used_llm_rails = used_llm_rails
+                 guardrails_cfg_path: str):
 
         config = nemoguardrails.RailsConfig.from_path(guardrails_cfg_path)
         self._rails_client = nemoguardrails.LLMRails(config)
