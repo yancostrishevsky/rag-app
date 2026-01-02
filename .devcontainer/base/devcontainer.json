@@ -36,7 +36,9 @@
         "ms-python.pylint",
         "ms-python.autopep8",
         "tamasfe.even-better-toml",
-        "VisualStudioExptTeam.vscodeintellicode"
+        "VisualStudioExptTeam.vscodeintellicode",
+        "mhutchie.git-graph",
+        "eamodio.gitlens"
       ]
     }
   }
