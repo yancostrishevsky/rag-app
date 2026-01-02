@@ -1,0 +1,56 @@
+"""Contains service that communicates with the llm-proxy module."""
+import json
+import logging
+from typing import Dict
+from typing import Iterator
+from typing import List
+
+import httpx
+from web_app.backend import utils
+
+
+def _logger() -> logging.Logger:
+    return logging.getLogger(__name__)
+
+
+class LLMProxyService:
+    """Communicates with the llm-proxy module and returns model's responses."""
+
+    def __init__(self, llm_proxy_url: str):
+
+        self._llm_proxy_url = llm_proxy_url
+
+        _logger().debug('Created service for llm-proxy with url: %s',
+                        llm_proxy_url)
+
+    def stream_chat_response(self,
+                             user_message: str,
+                             chat_history: utils.ChatHistory,
+                             context_docs: List[utils.ContextDocument]) -> Iterator[Dict[str, str]]:
+        """Collects LLM response based on the context and streams it.
+
+        Args:
+            user_message: The message from the user to generate a response for.
+            chat_history: The history of the chat to provide context for the request.
+            context_docs: The documents retrieved to provide additional context.
+
+        Returns:
+            A generator that yields chunks of the chat response as they are received. Each chunk
+                contain the 'content' field.
+        """
+
+        _logger().debug(('Streaming chat response with user_message: %s, ' +
+                         'chat_history: %s, context_docs: %s'),
+                        user_message, chat_history, context_docs)
+
+        url = f"{self._llm_proxy_url}/stream_chat_response"
+
+        payload = {
+            'user_message': user_message,
+            'chat_history': utils.chat_history_to_payload(chat_history),
+            'context_docs': utils.context_docs_to_payload(context_docs)
+        }
+
+        with httpx.stream('POST', url, json=payload, timeout=5) as stream:
+            for chunk in stream.iter_bytes():
+                yield json.loads(chunk.decode('utf-8'))

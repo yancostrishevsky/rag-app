@@ -2,27 +2,44 @@
 version: '3.9'
 
 services:
-  core-service:
+  main-llm-responder:
     build:
-      context: .
-      dockerfile: services/core-service/Dockerfile
-    container_name: core-service
-    ports:
-      - 8001:8000
-    networks:
-      - rag-net
+      context: services/llm-endpoint/
+      dockerfile: llm-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11434
 
-  api-gateway:
-    build:
-      context: .
-      dockerfile: services/api-gateway/Dockerfile
-    container_name: api-gateway
+    container_name: main-llm-responder
     ports:
-      - 8080:8000
-    depends_on:
-      - core-service
+      - 11434:11434
+    volumes:
+      - ./persist_dir/main-llm-responder:/root/.ollama
     networks:
       - rag-net
+    environment:
+      - LLM_GENERATOR_MODEL=llama3.1:8b
+      - OLLAMA_DEBUG=2
+      - OLLAMA_HOST=0.0.0.0:11434
+
+  guard-llm:
+    build:
+      context: services/llm-endpoint/
+      dockerfile: llm-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11435
+
+    container_name: guard-llm
+    ports:
+      - 11435:11435
+    volumes:
+      - ./persist_dir/guard-llm:/root/.ollama
+    networks:
+      - rag-net
+    environment:
+      - LLM_GENERATOR_MODEL=llama3.1:8b
+      - OLLAMA_DEBUG=2
+      - OLLAMA_HOST=0.0.0.0:11435
+    
 
 networks:
   rag-net:

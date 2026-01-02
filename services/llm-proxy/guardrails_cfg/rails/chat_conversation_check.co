@@ -1,0 +1,22 @@
+define bot refuse llm call error
+  "<llm_call_error>"
+
+define bot refuse input violation
+  "<input_rails_violation>"
+
+define flow chat conversation check
+
+  $result = execute chat_conversation_check
+
+  if not $result.allowed
+    if $result.reason == "<llm_call_error>"
+      bot refuse llm call error
+      stop
+
+    if $result.reason == "<input_rails_violation>"
+      bot refuse input violation
+      stop
+
+  
+
+

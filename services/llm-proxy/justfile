@@ -11,17 +11,8 @@ setup-environment:
     uv venv
     uv pip install -e .[dev]
 
-# Run the Gradio web application with live reloading.
-run-app-dev:
-    uv run gradio main_dev.py --watch-dirs . --demo-name web_application
-
-# Run the web application.
-run-app:
-    uv run python main.py
-
-# Run the mock backend server.
-run-mock-backend:
-    uv run python mock_backend.py
+run-server *args:
+    uv run python main.py "$@"
 
 # Runs static checks using global pre-commit configuration.
 run-precommit:

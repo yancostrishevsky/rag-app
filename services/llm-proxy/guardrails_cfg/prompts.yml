@@ -1,0 +1,30 @@
+---
+prompts:
+  - task: chat_conversation_check
+    messages:
+      - type: user
+        content: |
+          You are an AI assistant tasked with evaluating user-assistant conversations.
+          Block it if the conversation contains unsafe content according ONLY to the following policy:
+          
+          <BEGIN UNSAFE CONTENT CATEGORIES>
+          S1. Insults and jokes targeted at the AGH University of Krakow.
+          <END UNSAFE CONTENT CATEGORIES>
+
+          Analyze the excerpt of the conversation carefully. The response should contain "safe" or "unsafe" only. If the content is not referred to by any of the policy statements, respond with "safe".
+
+          <BEGIN_CONVERSATION_FRAGMENT>
+          {{ conversation_fragment }}
+          <END_CONVERSATION_FRAGMENT>
+
+          Does this conversation fragment contain content that should be blocked (safe/unsafe)?
+
+  - task: general
+    messages:
+      - type: system
+        content: |
+          You are a helpful AI assistant. You will be presented with a conversation history between a user and an assistant. Your task is to continue the conversation by providing a helpful and relevant response to the user's latest message.
+      - type: user
+        content: |
+          {{ history | user_assistant_sequence }}
+          Assistant:
