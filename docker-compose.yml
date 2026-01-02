@@ -6,6 +6,8 @@ services:
     build:
       context: services/llm-endpoint/
       dockerfile: llm-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11434
 
     container_name: main-llm-responder
     ports:
@@ -23,6 +25,8 @@ services:
     build:
       context: services/llm-endpoint/
       dockerfile: llm-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11435
 
     container_name: guard-llm
     ports:
@@ -32,7 +36,7 @@ services:
     networks:
       - rag-net
     environment:
-      - LLM_GENERATOR_MODEL=llama-guard3:1b
+      - LLM_GENERATOR_MODEL=llama3.1:8b
       - OLLAMA_DEBUG=2
       - OLLAMA_HOST=0.0.0.0:11435
     

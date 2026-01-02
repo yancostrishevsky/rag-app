@@ -5,6 +5,6 @@ RUN chmod +x /root/entrypoint.sh
 
 WORKDIR /root
 
-EXPOSE 11434
+EXPOSE ${EXPOSED_PORT}
 
 ENTRYPOINT ["./entrypoint.sh"]
