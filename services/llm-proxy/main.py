@@ -4,8 +4,6 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
-from typing import Dict
-from typing import List
 import json
 import sys
 
@@ -52,7 +50,7 @@ app = fastapi.FastAPI(lifespan=lifespan)
 
 
 @app.get('/ping')
-async def read_ping() -> Dict[str, str]:
+async def read_ping() -> dict[str, str]:
     """Health check endpoint."""
     return {'message': 'Service is running'}
 
@@ -60,8 +58,8 @@ async def read_ping() -> Dict[str, str]:
 class RequestStreamChatResponse(pydantic.BaseModel):
     """Request to return the LLM response for a given query and retrieved context."""
     user_message: str
-    chat_history: List[Dict[str, Any]]
-    context_docs: List[Dict[str, Any]]
+    chat_history: list[dict[str, Any]]
+    context_docs: list[dict[str, Any]]
 
 
 @app.post('/stream_chat_response')

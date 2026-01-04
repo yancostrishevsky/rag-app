@@ -3,8 +3,6 @@ import json
 import logging
 from typing import Any
 from typing import AsyncIterator
-from typing import Dict
-from typing import List
 
 from langchain_ollama import OllamaLLM, ChatOllama
 
@@ -33,7 +31,7 @@ class ChatLLMService:
 
     async def stream_chat_response(self,
                                    user_query: str,
-                                   chat_history: List[Dict[str, Any]]) -> AsyncIterator[bytes]:
+                                   chat_history: list[dict[str, Any]]) -> AsyncIterator[bytes]:
         """Streams, chunk by chunk, LLM response for a given query and chat history.
 
         The input is checkes according to the guardrails specification.
