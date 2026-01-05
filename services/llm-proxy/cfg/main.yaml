@@ -1,6 +1,13 @@
 ---
-persist_data_path: data/
-guardrails_cfg_path: guardrails_cfg/
 server_host: 0.0.0.0
 server_port: 8080
 n_server_workers: 1
+persist_data_path: data/
+models:
+  main_chat:
+    model: local_ollama_model
+    base_url: http://localhost:11434
+
+  conversation_safety_guardrail:
+    model: local_ollama_model
+    base_url: http://localhost:11435

@@ -3,10 +3,12 @@ import json
 import logging
 from typing import Any
 from typing import AsyncIterator
-from typing import Dict
-from typing import List
 
-import nemoguardrails
+from langchain_ollama import ChatOllama
+from llm_proxy import llm_actions
+from llm_proxy.rails import rails
+from llm_proxy.rails.core import Guardrail
+from llm_proxy.rails.core import LLMCallContext
 
 
 def _logger() -> logging.Logger:
@@ -16,17 +18,21 @@ def _logger() -> logging.Logger:
 class ChatLLMService:
     """Establishes connection with self-hosted LLM and handles requests to it."""
 
-    def __init__(self,
-                 guardrails_cfg_path: str):
+    def __init__(self, models_cfg: dict[str, dict[str, Any]]) -> None:
 
-        config = nemoguardrails.RailsConfig.from_path(guardrails_cfg_path)
-        self._rails_client = nemoguardrails.LLMRails(config)
+        self._input_guardrails: list[Guardrail] = [
+            rails.ConversationSafetyGuardrail(
+                llm=ChatOllama(**models_cfg['conversation_safety_guardrail'],
+                               temperature=0.0))
+        ]
 
-        _logger().debug('Created GuardrailsService from config: %s.', config)
+        self._chat_response_action = llm_actions.ChatResponseAction(
+            llm=ChatOllama(**models_cfg['main_chat'])
+        )
 
     async def stream_chat_response(self,
                                    user_query: str,
-                                   chat_history: List[Dict[str, Any]]) -> AsyncIterator[bytes]:
+                                   chat_history: list[dict[str, Any]]) -> AsyncIterator[bytes]:
         """Streams, chunk by chunk, LLM response for a given query and chat history.
 
         The input is checkes according to the guardrails specification.
@@ -35,40 +41,37 @@ class ChatLLMService:
         _logger().debug('Streaming llm response for query \'%s\' and conversation %s...',
                         user_query, chat_history)
 
-        messages = chat_history + [
-            {'role': 'user', 'content': user_query}
-        ]
+        llm_call_context = LLMCallContext(
+            user_message=user_query,
+            chat_history=chat_history,
+            retrieved_context=[]
+        )
 
-        async for chunk in self._rails_client.stream_async(
-                messages=messages,
-                options={'log': {'activated_rails': True},
-                         'llm_output': True}):
+        for guardrail in self._input_guardrails:
+            decision = await guardrail.should_pass(llm_call_context)
 
-            if self._is_chunk_error(chunk):
-                yield json.dumps({'error': self._get_error_message(chunk)}).encode('utf-8')
+            if not decision.should_pass:
+                error_message = (
+                    f'Input guardrail \'{guardrail.name}\' blocked the request. '
+                    f'Reason: {decision.reason}'
+                )
+
+                _logger().warning(error_message)
+
+                yield json.dumps({'error': error_message}).encode('utf-8')
                 return
 
-            chunk_struct = {'content': chunk}
+        try:
+            async for chunk in self._chat_response_action.run(
+                    user_query=user_query,
+                    chat_history=chat_history,
+                    context_documents=None
+            ):
+                chunk_struct = {'content': chunk}
 
-            yield json.dumps(chunk_struct).encode('utf-8')
+                yield json.dumps(chunk_struct).encode('utf-8')
 
-    def _is_chunk_error(self, chunk: str) -> bool:
-        """Tells whether the given chunk indicates an error.
+        except Exception as e:  # pylint: disable=broad-except
+            _logger().error('Chat call failed: %s', str(e))
 
-        An error chunk does not contain the expected vocabulary and indicates that either
-        the guardrails blocked the response or the LLM call failed.
-        """
-
-        return chunk in ('<input_rails_violation>', '<llm_call_error>')
-
-    def _get_error_message(self, chunk: str) -> str:
-        """Returns human-readable error message for the given error chunk."""
-
-        if chunk == '<input_rails_violation>':
-            return 'The input was blocked by safety guardrails.'
-
-        if chunk == '<llm_call_error>':
-            return 'The model call failed.'
-
-        _logger().error('Unknown error chunk: %s', chunk)
-        return 'An unknown error occurred.'
+            yield json.dumps({'error': 'Internal system error.'}).encode('utf-8')

@@ -1,0 +1,22 @@
+FROM ${LLM_GENERATOR_MODEL}
+
+TEMPLATE """
+{{- if .System}}<|start_header_id|>system<|end_header_id|>
+{{ .System }}<|eot_id|>
+{{- end }}
+
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 }}
+
+{{- if eq .Role "user" }}<|start_header_id|>user<|end_header_id|>
+{{ .Content }}<|eot_id|>
+{{ if $last }}<|start_header_id|>assistant<|end_header_id|>{{ end }}
+
+{{- else if eq .Role "assistant" }}<|start_header_id|>assistant<|end_header_id|>
+{{ .Content }}
+{{ if not $last }}<|eot_id|>{{ end }}
+{{- end }}
+{{- end }}
+"""
+
+

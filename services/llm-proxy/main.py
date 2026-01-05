@@ -1,13 +1,11 @@
 """"Starts the backend server for the entrypoint service."""
+import json
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
-from typing import Dict
-from typing import List
-import json
-import sys
 
 import fastapi
 import hydra
@@ -42,9 +40,7 @@ async def lifespan(_):  # type: ignore
     # the `lifespan` callback.
     global llm_service  # pylint: disable=global-statement
 
-    llm_service = chat_llm_service.ChatLLMService(
-        guardrails_cfg_path=cfg.guardrails_cfg_path
-    )
+    llm_service = chat_llm_service.ChatLLMService(cfg.models)
 
     yield
 
@@ -53,7 +49,7 @@ app = fastapi.FastAPI(lifespan=lifespan)
 
 
 @app.get('/ping')
-async def read_ping() -> Dict[str, str]:
+async def read_ping() -> dict[str, str]:
     """Health check endpoint."""
     return {'message': 'Service is running'}
 
@@ -61,8 +57,8 @@ async def read_ping() -> Dict[str, str]:
 class RequestStreamChatResponse(pydantic.BaseModel):
     """Request to return the LLM response for a given query and retrieved context."""
     user_message: str
-    chat_history: List[Dict[str, Any]]
-    context_docs: List[Dict[str, Any]]
+    chat_history: list[dict[str, Any]]
+    context_docs: list[dict[str, Any]]
 
 
 @app.post('/stream_chat_response')
