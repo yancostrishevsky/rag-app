@@ -11,6 +11,8 @@ def app_module(tmp_path, monkeypatch):
     monkeypatch.setenv("VECTOR_STORE_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("VECTOR_STORE_DB_PATH", str(tmp_path / "store.sqlite3"))
     monkeypatch.setenv("VECTOR_STORE_EMBEDDING_DIM", "128")
+    monkeypatch.setenv("VECTOR_STORE_INDEX_PATH", str(tmp_path / "index.faiss"))
+    monkeypatch.setenv("VECTOR_STORE_EMBEDDER", "hash")
 
     for module_name in (
         "vector_store_service.app",
@@ -29,7 +31,7 @@ def client(app_module):
 
 
 def test_documents_search_and_context(client: TestClient, unique_tokens) -> None:
-    token_a, token_b, token_c = unique_tokens(3, 128)
+    token_a, token_b, token_c, title_one, title_two = unique_tokens(5, 128)
 
     response = client.post(
         "/documents",
@@ -37,12 +39,12 @@ def test_documents_search_and_context(client: TestClient, unique_tokens) -> None
             "documents": [
                 {
                     "doc_id": "doc-1",
-                    "title": "Doc 1",
+                    "title": title_one,
                     "content": f"{token_a} {token_b}"
                 },
                 {
                     "doc_id": "doc-2",
-                    "title": "Doc 2",
+                    "title": title_two,
                     "content": f"{token_c}"
                 }
             ]
@@ -74,7 +76,7 @@ def test_documents_search_and_context(client: TestClient, unique_tokens) -> None
     assert response.status_code == 200
     context_docs = response.json()["context_docs"]
     assert context_docs
-    assert context_docs[0][0] == "Doc 1"
+    assert context_docs[0][0] == title_one
 
 
 def test_search_min_score_returns_empty(client: TestClient, unique_tokens) -> None:
