@@ -5,9 +5,9 @@ n_server_workers: 1
 persist_data_path: data/
 models:
   main_chat:
-    model: llama3.1:8b
+    model: local_ollama_model
     base_url: http://localhost:11434
 
   conversation_safety_guardrail:
-    model: llama3.1:8b
+    model: local_ollama_model
     base_url: http://localhost:11435
