@@ -8,6 +8,9 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.115.12",
+    "faiss-cpu==1.8.0",
+    "numpy==1.26.4",
+    "sentence-transformers==2.7.0",
     "uvicorn==0.34.3"
 ]
 

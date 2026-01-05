@@ -6,6 +6,7 @@ import uuid
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 
+from vector_store_service.embeddings import create_embedder
 from vector_store_service.schemas import DocumentOut
 from vector_store_service.schemas import RequestCollectContextInfo
 from vector_store_service.schemas import RequestStreamChatResponse
@@ -20,9 +21,16 @@ from vector_store_service.vector_store import VectorStore
 
 
 settings = load_settings()
+embedder = create_embedder(
+    embedder_type=settings.embedder_type,
+    model_name=settings.model_name,
+    embedding_dim=settings.embedding_dim
+)
 vector_store = VectorStore(
     db_path=str(settings.db_path),
-    embedding_dim=settings.embedding_dim
+    embedding_dim=settings.embedding_dim,
+    embedder=embedder,
+    index_path=str(settings.index_path)
 )
 
 app = FastAPI(title='vector-store-service')
