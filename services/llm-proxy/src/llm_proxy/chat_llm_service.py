@@ -22,7 +22,8 @@ class ChatLLMService:
 
         self._input_guardrails: list[Guardrail] = [
             rails.ConversationSafetyGuardrail(
-                llm=ChatOllama(**models_cfg['conversation_safety_guardrail']))
+                llm=ChatOllama(**models_cfg['conversation_safety_guardrail'],
+                               temperature=0.0))
         ]
 
         self._chat_response_action = llm_actions.ChatResponseAction(

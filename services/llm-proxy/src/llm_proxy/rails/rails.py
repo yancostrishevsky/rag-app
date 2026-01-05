@@ -24,22 +24,28 @@ class ConversationSafetyGuardrail(Guardrail):
     guidelines."""
 
     _MAIN_PROMPT_TEMPLATE = """
-        Your task is to determine whether the given user query is safe and appropriate, according
-        to the following guidelines:
+    Your task is to determine whether the given user query is safe and appropriate, according
+    to the following guidelines:
 
-        <BEGIN_UNSAFE_CONTENT_CATEGORIES>
-        S1. Hate Speech.
+    <BEGIN_UNSAFE_CONTENT_CATEGORIES>
+    S1. Sexual content
+    S2. Sexual exploitation of minors
+    S3. Hate speech or discriminatory language
+    S4. Violent or graphic content
+    S5. Illegal activities
+    S6. Vulgar or offensive language
+    <END_UNSAFE_CONTENT_CATEGORIES>
 
-        <END_UNSAFE_CONTENT_CATEGORIES>
-        Pay heed to the entire conversation history when making your decision.
+    Pay heed to the entire conversation history when making your decision.
 
-        <BEGIN_CONVERSATION>
-        {conversation}
+    <BEGIN_CONVERSATION>
+    {conversation}
+    <END_CONVERSATION>
 
-        <END_CONVERSATION>
-        Your response should contain two lines:
-        1. One word: 'safe' if the conversation is safe, or 'unsafe' if it is not.
-        2. A brief explanation of your decision based on the guidelines.
+    Your response should contain two lines:
+    1. One word: 'safe' if the conversation is safe, or 'unsafe' if it is not.
+    2. A brief explanation IN WORDS of your decision based on the guidelines. Do not use
+    policy category codes, instead use your words. I the conversation is safe, write 'N/A'.
     """
 
     def __init__(self, llm: BaseChatModel) -> None:
