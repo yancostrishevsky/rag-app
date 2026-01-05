@@ -2,7 +2,8 @@
 
 import logging
 
-from langchain_core.language_models.llms import BaseLLM
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from llm_proxy.rails.core import Guardrail, LLMCallContext, GuardrailDecision
 
@@ -41,20 +42,20 @@ class ConversationSafetyGuardrail(Guardrail):
         2. A brief explanation of your decision based on the guidelines.
     """
 
-    def __init__(self, llm: BaseLLM) -> None:
+    def __init__(self, llm: BaseChatModel) -> None:
 
         self._llm = llm
 
     async def should_pass(self, llm_call_context: LLMCallContext) -> GuardrailDecision:
         """Returns true if the conversation is safe, false otherwise."""
 
-        response = await self._llm.agenerate(
-            [self._MAIN_PROMPT_TEMPLATE.format(
-                conversation=self._format_conversation(llm_call_context)
-            )]
-        )
+        messages = [SystemMessage(self._SYSTEM_PROMPT),
+                    HumanMessage(self._MAIN_PROMPT_TEMPLATE.format(
+                        conversation=self._format_conversation(llm_call_context)))]
 
-        decision = response.generations[0][0].text.strip().lower()
+        response = await self._llm.ainvoke(messages)
+
+        decision = str(response.content)
         decision_lines = [line.strip() for line in decision.split('\n') if line.strip()]
 
         _logger().debug('Guardrail \'%s\' response:\n%s', self.name, decision)

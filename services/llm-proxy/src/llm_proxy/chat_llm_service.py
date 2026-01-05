@@ -4,7 +4,7 @@ import logging
 from typing import Any
 from typing import AsyncIterator
 
-from langchain_ollama import OllamaLLM, ChatOllama
+from langchain_ollama import ChatOllama
 
 from llm_proxy.rails.core import LLMCallContext, Guardrail
 from llm_proxy.rails import rails
@@ -22,7 +22,7 @@ class ChatLLMService:
 
         self._input_guardrails: list[Guardrail] = [
             rails.ConversationSafetyGuardrail(
-                llm=OllamaLLM(**models_cfg['conversation_safety_guardrail']))
+                llm=ChatOllama(**models_cfg['conversation_safety_guardrail']))
         ]
 
         self._chat_response_action = llm_actions.ChatResponseAction(
