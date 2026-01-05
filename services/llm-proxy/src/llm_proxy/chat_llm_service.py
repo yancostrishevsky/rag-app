@@ -5,10 +5,10 @@ from typing import Any
 from typing import AsyncIterator
 
 from langchain_ollama import ChatOllama
-
-from llm_proxy.rails.core import LLMCallContext, Guardrail
-from llm_proxy.rails import rails
 from llm_proxy import llm_actions
+from llm_proxy.rails import rails
+from llm_proxy.rails.core import Guardrail
+from llm_proxy.rails.core import LLMCallContext
 
 
 def _logger() -> logging.Logger:

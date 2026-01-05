@@ -1,11 +1,12 @@
 """Contains implementation of input/output/retrieval guardrails."""
-
 import logging
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
-
-from llm_proxy.rails.core import Guardrail, LLMCallContext, GuardrailDecision
+from langchain_core.messages import HumanMessage
+from langchain_core.messages import SystemMessage
+from llm_proxy.rails.core import Guardrail
+from llm_proxy.rails.core import GuardrailDecision
+from llm_proxy.rails.core import LLMCallContext
 
 
 def _logger() -> logging.Logger:
@@ -82,7 +83,7 @@ class ConversationSafetyGuardrail(Guardrail):
 
     @property
     def name(self) -> str:
-        return "ConversationSafetyGuardrail"
+        return 'ConversationSafetyGuardrail'
 
     def _format_conversation(self,
                              llm_call_context: LLMCallContext) -> str:

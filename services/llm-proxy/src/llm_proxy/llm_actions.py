@@ -1,18 +1,21 @@
 """Contains modules performing LLM-related isolated actions."""
-
-from typing import Any, AsyncIterator
+from typing import Any
+from typing import AsyncIterator
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
+from langchain_core.messages import AIMessage
+from langchain_core.messages import BaseMessage
+from langchain_core.messages import HumanMessage
+from langchain_core.messages import SystemMessage
 
 
 class ChatResponseAction:
     """Generates chat response for a given user query and chat history."""
 
     _SYSTEM_PROMPT = (
-        "You are a helpful AI assistant. Respond to the user query based on the conversation "
-        "history, i.e. fall back to the chat history when the query refers to previous messages."
-        "If any context documents are provided, use them to ground your response."
+        'You are a helpful AI assistant. Respond to the user query based on the conversation '
+        'history, i.e. fall back to the chat history when the query refers to previous messages.'
+        'If any context documents are provided, use them to ground your response.'
     )
 
     def __init__(self,
@@ -38,9 +41,9 @@ class ChatResponseAction:
                 messages.append(AIMessage(content=content))
 
         if context_documents:
-            context_content = "\n\n".join(context_documents)
+            context_content = '\n\n'.join(context_documents)
             context_message = (
-                "The following context documents are provided to help you answer the user query:\n"
+                'The following context documents are provided to help you answer the user query:\n'
                 f"{context_content}"
             )
             messages.append(SystemMessage(content=context_message))
