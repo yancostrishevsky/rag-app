@@ -8,7 +8,7 @@ on:
       - "pyproject.toml"
       - ".github/workflows/service-checks.yml"
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - "services/**"
       - ".pre-commit-config.yaml"
