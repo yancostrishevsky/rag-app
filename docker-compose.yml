@@ -76,6 +76,21 @@ services:
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11436
 
+  web-app:
+    build:
+      context: services/web-app/
+      dockerfile: web-app.Dockerfile
+      args:
+        WEB_APP_PORT: 8080
+
+    container_name: web-app
+    ports:
+      - 8080:8080
+    volumes:
+      - ./persist_dir/web-app:/app/data
+    networks:
+      - rag-net
+
 networks:
   rag-net:
     driver: bridge
