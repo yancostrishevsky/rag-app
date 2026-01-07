@@ -41,6 +41,26 @@ services:
       - OLLAMA_HOST=0.0.0.0:11435
     
 
+
+  embedding-endpoint:
+    build:
+      context: services/embedding-endpoint/
+      dockerfile: embedding-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11436
+    
+    container_name: embedding-endpoint
+    ports:
+      - 11436:11436
+    volumes:
+      - ./persist_dir/embedding-endpoint:/root/.ollama
+    networks:
+      - rag-net
+    environment:
+      - EMBEDDING_MODEL=nomic-embed-text:v1.5
+      - OLLAMA_DEBUG=0
+      - OLLAMA_HOST=0.0.0.0:11436
+
 networks:
   rag-net:
     driver: bridge
