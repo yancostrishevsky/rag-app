@@ -11,7 +11,7 @@ doc_retrieval:
   similarity_threshold: 0.6
   helper_llm:
     model_name: local_ollama_model
-    url: http://main-llm-responder:11434
+    url: http://helper-llm:11437
     temperature: 0.2
 
 
