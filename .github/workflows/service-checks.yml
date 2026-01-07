@@ -50,11 +50,18 @@ jobs:
     if: needs.changes.outputs.context_retriever == 'true'
     steps:
       - uses: actions/checkout@v4
+      - name: Provide dummy SSH_AUTH_SOCK for devcontainer mounts
+        run: |
+          mkdir -p /tmp
+          touch /tmp/ssh-agent.sock
 
       - name: Run just run-precommit (devcontainer)
         uses: devcontainers/ci@v0.3
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh-agent.sock
         with:
           subFolder: services/context-retriever
+          configFile: .devcontainer/context-retriever/devcontainer.json
           runCmd: just run-precommit
 
   precommit-llm-proxy:
@@ -64,10 +71,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Provide dummy SSH_AUTH_SOCK for devcontainer mounts
+        run: |
+          mkdir -p /tmp
+          touch /tmp/ssh-agent.sock
+
       - name: Run just run-precommit (devcontainer)
         uses: devcontainers/ci@v0.3
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh-agent.sock
         with:
           subFolder: services/llm-proxy
+          configFile: .devcontainer/llm-proxy/devcontainer.json
           runCmd: just run-precommit
 
   precommit-web-app:
@@ -82,11 +97,23 @@ jobs:
           mkdir -p /tmp
           touch /tmp/ssh-agent.sock
 
+      - name: Generate CI devcontainer config (skip postCreateCommand)
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          src = pathlib.Path(".devcontainer/web-app/devcontainer.json")
+          dst = pathlib.Path(".devcontainer/web-app/devcontainer.ci.json")
+          data = json.loads(src.read_text())
+          data.pop("postCreateCommand", None)
+          dst.write_text(json.dumps(data, indent=2) + "\n")
+          print(f"Written {dst}")
+          PY
+
       - name: Run just run-precommit (devcontainer)
         uses: devcontainers/ci@v0.3
         env:
           SSH_AUTH_SOCK: /tmp/ssh-agent.sock
         with:
           subFolder: services/web-app
-          configFile: .devcontainer/web-app/devcontainer.json
+          configFile: .devcontainer/web-app/devcontainer.ci.json
           runCmd: just run-precommit
