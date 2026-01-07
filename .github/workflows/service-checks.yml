@@ -83,7 +83,8 @@ jobs:
         with:
           subFolder: services/context-retriever
           configFile: .devcontainer/context-retriever/devcontainer.json
-          runCmd: just run-precommit
+          runCmd: >-
+            /bin/bash -lc 'export PATH=/home/appuser/.local/bin:/home/appuser/.cargo/bin:$PATH; just run-precommit'
 
   precommit-llm-proxy:
     runs-on: ubuntu-latest
@@ -116,7 +117,8 @@ jobs:
         with:
           subFolder: services/llm-proxy
           configFile: .devcontainer/llm-proxy/devcontainer.json
-          runCmd: just run-precommit
+          runCmd: >-
+            /bin/bash -lc 'export PATH=/home/appuser/.local/bin:/home/appuser/.cargo/bin:$PATH; just run-precommit'
 
   precommit-web-app:
     runs-on: ubuntu-latest
@@ -149,4 +151,5 @@ jobs:
         with:
           subFolder: services/web-app
           configFile: .devcontainer/web-app/devcontainer.json
-          runCmd: just run-precommit
+          runCmd: >-
+            /bin/bash -lc 'export PATH=/home/appuser/.local/bin:/home/appuser/.cargo/bin:$PATH; just run-precommit'
