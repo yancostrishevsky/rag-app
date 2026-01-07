@@ -40,7 +40,22 @@ services:
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11435
     
+  vector-store:
+    build:
+      context: services/vector-store/
+      dockerfile: vector-store.Dockerfile
+      args:
+        EXPOSED_PORT_REST: 6333
+        EXPOSED_PORT_GRPC: 6334
 
+    container_name: vector-store
+    ports:
+      - 6333:6333
+      - 6334:6334
+    volumes:
+      - ./persist_dir/vector-store:/qdrant/storage:z
+    networks:
+      - rag-net
 
   embedding-endpoint:
     build:
