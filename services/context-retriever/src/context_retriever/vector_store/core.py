@@ -17,7 +17,7 @@ class VectorStoreProxy(ABC):
     """Interface for classes handling vector store operations."""
 
     @abstractmethod
-    def store_documents(self, documents: list[Document]) -> None:
+    async def store_documents(self, documents: list[Document]) -> None:
         """Stores the given documents in the vector store.
 
         Args:
@@ -25,7 +25,7 @@ class VectorStoreProxy(ABC):
         """
 
     @abstractmethod
-    def retrieve_documents(self, query: str) -> list[Document]:
+    async def retrieve_documents(self, query: str) -> list[Document]:
         """Retrieves documents from the vector store based on the given query.
 
         Args:

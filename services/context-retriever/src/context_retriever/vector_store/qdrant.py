@@ -43,7 +43,7 @@ class QdrantProxy(vs_core.VectorStoreProxy):
 
         self._ensure_collection_exists()
 
-    def store_documents(self, documents: list[Document]) -> None:
+    async def store_documents(self, documents: list[Document]) -> None:
         """Stores the given documents in the vector store.
 
         Args:
@@ -55,7 +55,7 @@ class QdrantProxy(vs_core.VectorStoreProxy):
 
         for batch_docs in vs_core.batch_iterate(documents, self._cfg.uploading_batch_size):
 
-            embedded_docs = self._embedding_model.embed_documents(
+            embedded_docs = await self._embedding_model.aembed_documents(
                 [doc.page_content for doc in batch_docs])
 
             self._client.upload_collection(
@@ -64,7 +64,7 @@ class QdrantProxy(vs_core.VectorStoreProxy):
                 payload=[{'text': doc.page_content} for doc in batch_docs],
             )
 
-    def retrieve_documents(self, query: str) -> list[Document]:
+    async def retrieve_documents(self, query: str) -> list[Document]:
         """Retrieves documents from the vector store based on the given query.
 
         Args:

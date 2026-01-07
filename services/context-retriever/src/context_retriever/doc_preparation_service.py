@@ -45,11 +45,11 @@ class DocPreparationService:
             is_separator_regex=False
         )
 
-    def upload_pdf(self,
-                   file_size: int,
-                   content_type: str,
-                   file_stream: BinaryIO
-                   ) -> tuple[bool, str]:
+    async def upload_pdf(self,
+                         file_size: int,
+                         content_type: str,
+                         file_stream: BinaryIO
+                         ) -> tuple[bool, str]:
         """Uploads a PDF document to the vector store.
         Args:
             file_size: Size of the file in bytes.
@@ -82,14 +82,9 @@ class DocPreparationService:
 
         chunks = self._text_splitter.split_documents(pdf_pages)
 
-        self._save_chunks_to_store(chunks)
+        await self._vector_store_proxy.store_documents(chunks)
 
         return True, ''
-
-    def _save_chunks_to_store(self, chunks: list[Document]) -> None:
-        """Saves the processed document chunks to the vector store."""
-
-        self._vector_store_proxy.store_documents(chunks)
 
     def _sanitize_pdf_metadata(self, pdf_pages: list[Document]) -> None:
         """Sanitizes metadata of PDF documents to remove unnecessary fields."""

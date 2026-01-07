@@ -62,8 +62,7 @@ async def lifespan(_):  # type: ignore
 
     doc_prep = doc_preparation_service.DocPreparationService(
         vector_store_proxy=vector_store_proxy,
-        doc_processing_cfg=doc_preparation_service.DocProcessingCfg(
-            **cfg.doc_processing)
+        doc_processing_cfg=doc_preparation_service.DocProcessingCfg(**cfg.doc_processing)
     )
     doc_retrieval = doc_retrieval_service.DocRetrievalService()
 
@@ -113,7 +112,7 @@ async def upload_pdf(file: fastapi.UploadFile) -> ResponseUploadDocument:
     if file.size is None:
         return ResponseUploadDocument(error='Cannot determine file size for the uploaded PDF.')
 
-    is_ok, error_msg = doc_prep.upload_pdf(
+    is_ok, error_msg = await doc_prep.upload_pdf(
         file_size=file.size,
         content_type=file.content_type,
         file_stream=file.file
