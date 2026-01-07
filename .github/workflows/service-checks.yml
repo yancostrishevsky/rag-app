@@ -24,17 +24,6 @@ permissions:
 env:
   PRECOMMIT_CMD: just run-precommit
 
-x-precommit-steps: &precommit_steps
-  - name: Checkout repository
-    uses: actions/checkout@v4
-  - name: Verify Docker engine
-    run: docker version
-  - name: Run pre-commit in devcontainer
-    uses: devcontainers/ci@v0.3
-    with:
-      configFile: ${{ env.DEVCONTAINER_CONFIG }}
-      runCmd: ${{ env.PRECOMMIT_CMD }}
-
 jobs:
   changes:
     name: Detect changed services
@@ -76,7 +65,16 @@ jobs:
     if: needs.changes.outputs.context-retriever == 'true'
     env:
       DEVCONTAINER_CONFIG: services/context-retriever/.devcontainer/devcontainer.json
-    steps: *precommit_steps
+    steps: &precommit_steps
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Verify Docker engine
+        run: docker version
+      - name: Run pre-commit in devcontainer
+        uses: devcontainers/ci@v0.3
+        with:
+          configFile: ${{ env.DEVCONTAINER_CONFIG }}
+          runCmd: ${{ env.PRECOMMIT_CMD }}
 
   precommit-web-app:
     name: Pre-commit (web-app)
