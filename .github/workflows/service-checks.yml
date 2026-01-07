@@ -69,16 +69,16 @@ jobs:
           runCmd: just run-precommit
 
   precommit-web-app:
-  runs-on: ubuntu-latest
-  needs: changes
-  if: needs.changes.outputs.web_app == 'true'
-  steps:
-    - uses: actions/checkout@v4
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.web_app == 'true'
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Run just run-precommit (devcontainer)
-      uses: devcontainers/ci@v0.3
-      with:
-        subFolder: services/web-app
-        configFile: .devcontainer/web-app/devcontainer.json
-        runCmd: just run-precommit
+      - name: Run just run-precommit (devcontainer)
+        uses: devcontainers/ci@v0.3
+        with:
+          subFolder: services/web-app
+          configFile: .devcontainer/web-app/devcontainer.json
+          runCmd: just run-precommit
 
