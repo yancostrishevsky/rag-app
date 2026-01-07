@@ -1,14 +1,13 @@
 """Contains class for handling communication with Qdrant vector store."""
-
 import logging
 
-import qdrant_client
-from qdrant_client.models import VectorParams, Distance
-from langchain_ollama.embeddings import OllamaEmbeddings
-from langchain_core.documents import Document
 import pydantic
-
+import qdrant_client
 from context_retriever.vector_store import core as vs_core
+from langchain_core.documents import Document
+from langchain_ollama.embeddings import OllamaEmbeddings
+from qdrant_client.models import Distance
+from qdrant_client.models import VectorParams
 
 
 def _logger() -> logging.Logger:
@@ -102,6 +101,6 @@ class QdrantProxy(vs_core.VectorStoreProxy):
     def _determine_vector_size(self) -> int:
         """Determines the size of the embedding vectors produced by the embedding model."""
 
-        sample_text = "Sample text for embedding size determination."
+        sample_text = 'Sample text for embedding size determination.'
         embedding = self._embedding_model.embed_query(sample_text)
         return len(embedding)

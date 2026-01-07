@@ -12,7 +12,6 @@ import hydra
 import omegaconf
 import pydantic
 import uvicorn
-
 from context_retriever import doc_preparation_service
 from context_retriever import doc_retrieval_service
 from context_retriever.vector_store import qdrant as qdrant_vs

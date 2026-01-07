@@ -1,15 +1,13 @@
 """Contains service that prepares documents for storage in the vector store."""
-
-from typing import BinaryIO
-import tempfile
 import logging
+import tempfile
+from typing import BinaryIO
 
-import pydantic
-from langchain_community import document_loaders
 import langchain_text_splitters
-from langchain_core.documents import Document
-
+import pydantic
 from context_retriever.vector_store.core import VectorStoreProxy
+from langchain_community import document_loaders
+from langchain_core.documents import Document
 
 
 def _logger() -> logging.Logger:
@@ -38,7 +36,7 @@ class DocPreparationService:
         self._vector_store_proxy = vector_store_proxy
 
         self._text_splitter = langchain_text_splitters.RecursiveCharacterTextSplitter(
-            separators=["\n\n", "\n", " "],
+            separators=['\n\n', '\n', ' '],
             chunk_size=doc_processing_cfg.chunk_size,
             chunk_overlap=doc_processing_cfg.chunk_overlap,
             length_function=len,

@@ -1,13 +1,12 @@
 """Contains service handling conversation context document retrieval."""
-
 import logging
 from typing import Any
 
 import pydantic
-from langchain_ollama.chat_models import ChatOllama
-from langchain.messages import SystemMessage, HumanMessage
-
 from context_retriever.vector_store import core as vs_core
+from langchain.messages import HumanMessage
+from langchain.messages import SystemMessage
+from langchain_ollama.chat_models import ChatOllama
 
 
 def _logger() -> logging.Logger:
@@ -142,4 +141,4 @@ class DocRetrievalService:
             for entry in chat_history
         ]
 
-        return "\n".join(history_lines)
+        return '\n'.join(history_lines)

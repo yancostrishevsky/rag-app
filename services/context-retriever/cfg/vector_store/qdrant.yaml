@@ -1,3 +1,4 @@
+---
 driver: qdrant
 url: http://localhost:6333
 collection_name: documents

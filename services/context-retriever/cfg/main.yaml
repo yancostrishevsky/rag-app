@@ -13,7 +13,7 @@ doc_retrieval:
     model_name: local_ollama_model
     url: http://localhost:11434
     temperature: 0.2
-    
+
 
 defaults:
   - vector_store: qdrant
