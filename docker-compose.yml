@@ -20,6 +20,12 @@ services:
       - LLM_GENERATOR_MODEL=llama3.1:8b
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11434
+    healthcheck:
+      test: curl -s http://localhost:11434/api/tags | grep '"model":"local_ollama_model:latest"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
 
   guard-llm:
     build:
@@ -39,6 +45,14 @@ services:
       - LLM_GENERATOR_MODEL=dolphin3:8b
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11435
+    healthcheck:
+      test: curl -s http://localhost:11435/api/tags | grep '"model":"local_ollama_model:latest"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+
+
     
   vector-store:
     build:
@@ -56,6 +70,12 @@ services:
       - ./persist_dir/vector-store:/qdrant/storage:z
     networks:
       - rag-net
+    healthcheck:
+      test: curl --fail http://localhost:6333/livez || exit 1
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
 
   embedding-endpoint:
     build:
@@ -75,6 +95,12 @@ services:
       - EMBEDDING_MODEL=nomic-embed-text:v1.5
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11436
+    healthcheck:
+      test: curl -s http://localhost:11436/api/tags | grep '"model":"nomic-embed-text:v1.5"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
 
   web-app:
     build:
