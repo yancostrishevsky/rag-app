@@ -65,7 +65,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.context-retriever == 'true'
     env:
-      DEVCONTAINER_CONFIG: services/context-retriever/.devcontainer/devcontainer.json
+      DEVCONTAINER_CONFIG: .devcontainer/context-retriever/devcontainer.json
       SERVICE_WORKDIR: /home/appuser/workspace/services/context-retriever
     steps: &precommit_steps
       - name: Checkout repository
