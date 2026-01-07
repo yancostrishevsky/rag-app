@@ -1,0 +1,11 @@
+---
+server_host: 0.0.0.0
+server_port: 8081
+n_server_workers: 1
+persist_data_path: data/
+doc_processing:
+  chunk_size: 2000
+  chunk_overlap: 400
+
+defaults:
+  - vector_store: qdrant
