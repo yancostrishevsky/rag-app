@@ -32,7 +32,9 @@ class ChatLLMService:
 
     async def stream_chat_response(self,
                                    user_query: str,
-                                   chat_history: list[dict[str, Any]]) -> AsyncIterator[bytes]:
+                                   chat_history: list[dict[str, Any]],
+                                   context_documents: list[dict[str, Any]] | None = None,
+                                   ) -> AsyncIterator[bytes]:
         """Streams, chunk by chunk, LLM response for a given query and chat history.
 
         The input is checkes according to the guardrails specification.
@@ -65,7 +67,7 @@ class ChatLLMService:
             async for chunk in self._chat_response_action.run(
                     user_query=user_query,
                     chat_history=chat_history,
-                    context_documents=None
+                    context_documents=context_documents
             ):
                 chunk_struct = {'content': chunk}
 

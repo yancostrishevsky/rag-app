@@ -67,9 +67,11 @@ async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingR
 
     assert llm_service is not None
 
-    return StreamingResponse(llm_service.stream_chat_response(request.user_message,
-                                                              chat_history=request.chat_history),
-                             media_type='application/json')
+    return StreamingResponse(
+        llm_service.stream_chat_response(request.user_message,
+                                         chat_history=request.chat_history,
+                                         context_documents=request.context_docs),
+        media_type='application/json')
 
 
 def _configure_logging(script_cfg: omegaconf.DictConfig) -> None:

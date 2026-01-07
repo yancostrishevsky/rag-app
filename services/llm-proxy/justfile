@@ -3,6 +3,8 @@
 # For more info, see: https://github.com/casey/just
 # --------------------------------------------------
 
+set positional-arguments
+
 set shell := ["bash", "-c"]
 
 # Setup virtual environment and install dependencies.
