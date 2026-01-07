@@ -117,6 +117,48 @@ services:
     networks:
       - rag-net
 
+  context-retriever:
+    build:
+      context: services/context-retriever/
+      dockerfile: context-retriever.Dockerfile
+      args:
+        API_PORT: 8899
+
+    container_name: context-retriever
+    ports:
+      - 8899:8899
+    volumes:
+      - ./persist_dir/context-retriever:/app/data
+    networks:
+      - rag-net
+    depends_on:
+      vector-store:
+        condition: service_healthy
+      embedding-endpoint:
+        condition: service_healthy
+      main-llm-responder:
+        condition: service_healthy
+
+  llm-proxy:
+    build:
+      context: services/llm-proxy/
+      dockerfile: llm-proxy.Dockerfile
+      args:
+        API_PORT: 8888
+
+    container_name: llm-proxy
+    ports:
+      - 8888:8888
+    volumes:
+      - ./persist_dir/llm-proxy:/app/data
+    networks:
+      - rag-net
+    depends_on:
+      main-llm-responder:
+        condition: service_healthy
+      guard-llm:
+        condition: service_healthy
+
 networks:
   rag-net:
     driver: bridge
