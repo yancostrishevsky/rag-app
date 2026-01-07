@@ -5,6 +5,14 @@ from typing import Dict
 from typing import List
 from typing import TypeAlias
 
+import pydantic
+
+
+class EndpointConnectionCfg(pydantic.BaseModel):
+    """Configuration for connecting to a backend endpoint."""
+
+    url: str
+    connection_timeout: float
 
 @dataclasses.dataclass
 class ChatMessage:
@@ -25,9 +33,8 @@ class ChatHistory:
 class ContextDocument:
     """Represents a single document retrieved from the doc store."""
 
-    title: str
     content: str
-
+    metadata: Dict[str, Any]
 
 UnstructuredChatHistory: TypeAlias = List[Dict[str, Any]]
 
@@ -50,8 +57,8 @@ def context_docs_to_payload(context_docs: List[ContextDocument]) -> Unstructured
 
     return [
         {
-            'title': doc.title,
-            'content': doc.content
+            'content': doc.content,
+            'metadata': doc.metadata,
         }
         for doc in context_docs
     ]

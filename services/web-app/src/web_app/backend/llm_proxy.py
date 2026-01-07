@@ -16,12 +16,12 @@ def _logger() -> logging.Logger:
 class LLMProxyService:
     """Communicates with the llm-proxy module and returns model's responses."""
 
-    def __init__(self, llm_proxy_url: str):
+    def __init__(self, endpoint_cfg: utils.EndpointConnectionCfg):
 
-        self._llm_proxy_url = llm_proxy_url
+        self._endpoint_cfg = endpoint_cfg
 
-        _logger().debug('Created service for llm-proxy with url: %s',
-                        llm_proxy_url)
+        _logger().info('Created service for llm-proxy with cfg: %s',
+                        endpoint_cfg)
 
     def stream_chat_response(self,
                              user_message: str,
@@ -43,7 +43,7 @@ class LLMProxyService:
                          'chat_history: %s, context_docs: %s'),
                         user_message, chat_history, context_docs)
 
-        url = f"{self._llm_proxy_url}/stream_chat_response"
+        url = f"{self._endpoint_cfg.url}/stream_chat_response"
 
         payload = {
             'user_message': user_message,
@@ -51,6 +51,8 @@ class LLMProxyService:
             'context_docs': utils.context_docs_to_payload(context_docs)
         }
 
-        with httpx.stream('POST', url, json=payload, timeout=5) as stream:
+        with httpx.stream('POST', url,
+                          json=payload,
+                          timeout=self._endpoint_cfg.connection_timeout) as stream:
             for chunk in stream.iter_bytes():
                 yield json.loads(chunk.decode('utf-8'))

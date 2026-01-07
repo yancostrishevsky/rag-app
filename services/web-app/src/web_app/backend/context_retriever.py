@@ -13,12 +13,12 @@ def _logger() -> logging.Logger:
 class ContextRetrieverService:
     """Communicates with the context-retriever module and retrieves context for queries."""
 
-    def __init__(self, context_retriever_url: str):
+    def __init__(self, endpoint_cfg: utils.EndpointConnectionCfg):
 
-        self._context_retriever_url = context_retriever_url
+        self._endpoint_cfg = endpoint_cfg
 
-        _logger().debug('Created service for context-retriever with url: %s',
-                        context_retriever_url)
+        _logger().info('Created service for context-retriever with cfg: %s',
+                        endpoint_cfg)
 
     def collect_context_info(self,
                              user_message: str,
@@ -36,16 +36,16 @@ class ContextRetrieverService:
         _logger().debug('Collecting context info with user_message: %s and chat_history: %s',
                         user_message, chat_history)
 
-        url = f"{self._context_retriever_url}/collect_context_info"
+        url = f"{self._endpoint_cfg.url}/collect_context_info"
         payload = {
             'user_message': user_message,
             'chat_history': utils.chat_history_to_payload(chat_history)
         }
 
-        response = requests.post(url, json=payload, timeout=5)
+        response = requests.post(url, json=payload, timeout=self._endpoint_cfg.connection_timeout)
         response.raise_for_status()
 
         response_data = response.json()
 
-        return [utils.ContextDocument(doc['title'], doc['content'])
+        return [utils.ContextDocument(doc['content'], doc['metadata'])
                 for doc in response_data['context_docs']]

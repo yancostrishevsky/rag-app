@@ -1,6 +1,11 @@
 ---
-context_retriever_url: http://context_retriever:8080
-llm_proxy_url: http://llm_proxy:8080
+context_retriever_cfg:
+  url: http://context-retriever:8899
+  connection_timeout: 45
+
+llm_proxy_cfg:
+  url: http://llm-proxy:8888
+  connection_timeout: 45
 persist_data_path: data/
 web_app_port: 8080
 web_app_host: 0.0.0.0
