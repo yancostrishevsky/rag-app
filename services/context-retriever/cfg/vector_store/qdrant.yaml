@@ -1,0 +1,8 @@
+---
+driver: qdrant
+url: http://localhost:6333
+collection_name: documents
+uploading_batch_size: 8
+embedding_model:
+  model_name: nomic-embed-text:v1.5
+  url: http://localhost:11436
