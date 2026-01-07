@@ -16,5 +16,5 @@ run-server *args:
 
 # Runs static checks using global pre-commit configuration.
 run-precommit:
-    uv run pre-commit run -c ../../.pre-commit-config.yaml \
+    uv run --extra dev pre-commit run -c ../../.pre-commit-config.yaml \
         --files `git ls-files --cached --others --exclude-standard`
