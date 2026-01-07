@@ -52,8 +52,31 @@ services:
       retries: 10
       start_period: 30s
 
+  helper-llm:
+    build:
+      context: services/llm-endpoint/
+      dockerfile: llm-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11434
 
-    
+    container_name: helper-llm
+    ports:
+      - 11437:11437
+    volumes:
+      - ./persist_dir/helper-llm:/root/.ollama
+    networks:
+      - rag-net
+    environment:
+      - LLM_GENERATOR_MODEL=dolphin3:8b
+      - OLLAMA_DEBUG=0
+      - OLLAMA_HOST=0.0.0.0:11437
+    healthcheck:
+      test: curl -s http://localhost:11437/api/tags | grep '"model":"local_ollama_model:latest"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+
   vector-store:
     build:
       context: services/vector-store/
