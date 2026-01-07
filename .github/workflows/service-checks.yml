@@ -1,155 +1,97 @@
-name: Service checks
+name: Service Checks
 
 on:
   pull_request:
     paths:
-      - "services/**"
-      - ".devcontainer/context-retriever/**"
-      - ".devcontainer/llm-proxy/**"
-      - ".devcontainer/web-app/**"
-      - ".pre-commit-config.yaml"
-      - "pyproject.toml"
-      - ".github/workflows/service-checks.yml"
+      - .github/workflows/service-checks.yml
+      - .pre-commit-config.yaml
+      - pyproject.toml
+      - services/context-retriever/**
+      - services/web-app/**
+      - services/llm-proxy/**
   push:
-    branches: [main, develop, gh-actions]
     paths:
-      - "services/**"
-      - ".devcontainer/context-retriever/**"
-      - ".devcontainer/llm-proxy/**"
-      - ".devcontainer/web-app/**"
-      - ".pre-commit-config.yaml"
-      - "pyproject.toml"
-      - ".github/workflows/service-checks.yml"
+      - .github/workflows/service-checks.yml
+      - .pre-commit-config.yaml
+      - pyproject.toml
+      - services/context-retriever/**
+      - services/web-app/**
+      - services/llm-proxy/**
 
 permissions:
   contents: read
 
+env:
+  PRECOMMIT_CMD: just run-precommit
+
+x-precommit-steps: &precommit_steps
+  - name: Checkout repository
+    uses: actions/checkout@v4
+  - name: Verify Docker engine
+    run: docker version
+  - name: Run pre-commit in devcontainer
+    uses: devcontainers/ci@v0.3
+    with:
+      configFile: ${{ env.DEVCONTAINER_CONFIG }}
+      runCmd: ${{ env.PRECOMMIT_CMD }}
+
 jobs:
   changes:
+    name: Detect changed services
     runs-on: ubuntu-latest
     outputs:
-      context_retriever: ${{ steps.filter.outputs.context_retriever }}
-      llm_proxy: ${{ steps.filter.outputs.llm_proxy }}
-      web_app: ${{ steps.filter.outputs.web_app }}
+      context-retriever: ${{ steps.filter.outputs.context-retriever }}
+      web-app: ${{ steps.filter.outputs.web-app }}
+      llm-proxy: ${{ steps.filter.outputs.llm-proxy }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Determine impacted services
         id: filter
+        uses: dorny/paths-filter@v3
         with:
           filters: |
-            context_retriever:
-              - "services/context-retriever/**"
-              - ".devcontainer/context-retriever/**"
-              - ".pre-commit-config.yaml"
-              - "pyproject.toml"
-            llm_proxy:
-              - "services/llm-proxy/**"
-              - ".devcontainer/llm-proxy/**"
-              - ".pre-commit-config.yaml"
-              - "pyproject.toml"
-            web_app:
-              - "services/web-app/**"
-              - ".devcontainer/web-app/**"
-              - ".pre-commit-config.yaml"
-              - "pyproject.toml"
+            context-retriever:
+              - services/context-retriever/**
+              - .pre-commit-config.yaml
+              - pyproject.toml
+              - .github/workflows/service-checks.yml
+            web-app:
+              - services/web-app/**
+              - .pre-commit-config.yaml
+              - pyproject.toml
+              - .github/workflows/service-checks.yml
+            llm-proxy:
+              - services/llm-proxy/**
+              - .pre-commit-config.yaml
+              - pyproject.toml
+              - .github/workflows/service-checks.yml
 
   precommit-context-retriever:
+    name: Pre-commit (context-retriever)
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.context_retriever == 'true'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Provide dummy SSH_AUTH_SOCK for devcontainer mounts
-        run: |
-          mkdir -p /tmp
-          touch /tmp/ssh-agent.sock
-
-      - name: Disable post-create/start commands for CI
-        run: |
-          python - <<'PY'
-          import json
-          import pathlib
-          path = pathlib.Path(".devcontainer/context-retriever/devcontainer.json")
-          data = json.loads(path.read_text())
-          data.pop("postCreateCommand", None)
-          data.pop("postStartCommand", None)
-          path.write_text(json.dumps(data, indent=2) + "\n")
-          PY
-
-      - name: Run just run-precommit (devcontainer)
-        uses: devcontainers/ci@v0.3
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh-agent.sock
-        with:
-          subFolder: services/context-retriever
-          configFile: .devcontainer/context-retriever/devcontainer.json
-          runCmd: >-
-            /bin/bash -lc 'export PATH=/home/appuser/.local/bin:/home/appuser/.cargo/bin:$PATH; just run-precommit'
-
-  precommit-llm-proxy:
-    runs-on: ubuntu-latest
-    needs: changes
-    if: needs.changes.outputs.llm_proxy == 'true'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Provide dummy SSH_AUTH_SOCK for devcontainer mounts
-        run: |
-          mkdir -p /tmp
-          touch /tmp/ssh-agent.sock
-
-      - name: Disable post-create/start commands for CI
-        run: |
-          python - <<'PY'
-          import json
-          import pathlib
-          path = pathlib.Path(".devcontainer/llm-proxy/devcontainer.json")
-          data = json.loads(path.read_text())
-          data.pop("postCreateCommand", None)
-          data.pop("postStartCommand", None)
-          path.write_text(json.dumps(data, indent=2) + "\n")
-          PY
-
-      - name: Run just run-precommit (devcontainer)
-        uses: devcontainers/ci@v0.3
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh-agent.sock
-        with:
-          subFolder: services/llm-proxy
-          configFile: .devcontainer/llm-proxy/devcontainer.json
-          runCmd: >-
-            /bin/bash -lc 'export PATH=/home/appuser/.local/bin:/home/appuser/.cargo/bin:$PATH; just run-precommit'
+    if: needs.changes.outputs.context-retriever == 'true'
+    env:
+      DEVCONTAINER_CONFIG: services/context-retriever/.devcontainer/devcontainer.json
+    steps: *precommit_steps
 
   precommit-web-app:
+    name: Pre-commit (web-app)
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.web_app == 'true'
-    steps:
-      - uses: actions/checkout@v4
+    if: needs.changes.outputs.web-app == 'true'
+    env:
+      DEVCONTAINER_CONFIG: .devcontainer/web-app/devcontainer.json
+    steps: *precommit_steps
 
-      - name: Provide dummy SSH_AUTH_SOCK for devcontainer mounts
-        run: |
-          mkdir -p /tmp
-          touch /tmp/ssh-agent.sock
-
-      - name: Disable post-create/start commands for CI
-        run: |
-          python - <<'PY'
-          import json
-          import pathlib
-          path = pathlib.Path(".devcontainer/web-app/devcontainer.json")
-          data = json.loads(path.read_text())
-          data.pop("postCreateCommand", None)
-          data.pop("postStartCommand", None)
-          path.write_text(json.dumps(data, indent=2) + "\n")
-          PY
-
-      - name: Run just run-precommit (devcontainer)
-        uses: devcontainers/ci@v0.3
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh-agent.sock
-        with:
-          subFolder: services/web-app
-          configFile: .devcontainer/web-app/devcontainer.json
-          runCmd: >-
-            /bin/bash -lc 'export PATH=/home/appuser/.local/bin:/home/appuser/.cargo/bin:$PATH; just run-precommit'
+  precommit-llm-proxy:
+    name: Pre-commit (llm-proxy)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.llm-proxy == 'true'
+    env:
+      DEVCONTAINER_CONFIG: .devcontainer/llm-proxy/devcontainer.json
+    steps: *precommit_steps
