@@ -25,11 +25,16 @@ class VectorStoreProxy(ABC):
         """
 
     @abstractmethod
-    async def retrieve_documents(self, query: str) -> list[Document]:
+    async def retrieve_documents(self,
+                                 query: str,
+                                 k: int,
+                                 sim_thresh: float) -> list[Document]:
         """Retrieves documents from the vector store based on the given query.
 
         Args:
             query: The query string to search for relevant documents.
+            k: The number of top documents to retrieve.
+            sim_thresh: Similarity threshold for document retrieval.
 
         Returns:
             List of documents matching the query.

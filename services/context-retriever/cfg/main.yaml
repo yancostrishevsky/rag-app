@@ -6,6 +6,14 @@ persist_data_path: data/
 doc_processing:
   chunk_size: 2000
   chunk_overlap: 400
+doc_retrieval:
+  max_context_docs: 3
+  similarity_threshold: 0.6
+  helper_llm:
+    model_name: local_ollama_model
+    url: http://localhost:11434
+    temperature: 0.2
+    
 
 defaults:
   - vector_store: qdrant

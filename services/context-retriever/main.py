@@ -64,7 +64,10 @@ async def lifespan(_):  # type: ignore
         vector_store_proxy=vector_store_proxy,
         doc_processing_cfg=doc_preparation_service.DocProcessingCfg(**cfg.doc_processing)
     )
-    doc_retrieval = doc_retrieval_service.DocRetrievalService()
+    doc_retrieval = doc_retrieval_service.DocRetrievalService(
+        cfg=doc_retrieval_service.DocRetrievalCfg(**cfg.doc_retrieval),
+        vector_store_proxy=vector_store_proxy
+    )
 
     yield
 
@@ -92,7 +95,15 @@ class ResponseCollectContextInfo(pydantic.BaseModel):
 @app.post('/collect_context_info')
 async def collect_context_info(request: RequestCollectContextInfo) -> ResponseCollectContextInfo:
     """Collects context documents from the vector store based on user message and chat history."""
-    return ResponseCollectContextInfo(context_docs=[])
+
+    assert doc_retrieval is not None
+
+    context_docs = await doc_retrieval.retrieve_context_docs(
+        user_message=request.user_message,
+        chat_history=request.chat_history
+    )
+
+    return ResponseCollectContextInfo(context_docs=context_docs)
 
 
 class ResponseUploadDocument(pydantic.BaseModel):

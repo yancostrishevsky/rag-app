@@ -44,11 +44,7 @@ class QdrantProxy(vs_core.VectorStoreProxy):
         self._ensure_collection_exists()
 
     async def store_documents(self, documents: list[Document]) -> None:
-        """Stores the given documents in the vector store.
-
-        Args:
-            documents: List of documents to be stored.
-        """
+        """Stores the given documents in the vector store."""
 
         _logger().debug('Storing %d documents in collection \'%s\'',
                         len(documents), self._cfg.collection_name)
@@ -61,23 +57,32 @@ class QdrantProxy(vs_core.VectorStoreProxy):
             self._client.upload_collection(
                 collection_name=self._cfg.collection_name,
                 vectors=embedded_docs,
-                payload=[{'text': doc.page_content} for doc in batch_docs],
+                payload=[{'content': doc.page_content,
+                          'metadata': doc.metadata} for doc in batch_docs],
             )
 
-    async def retrieve_documents(self, query: str) -> list[Document]:
-        """Retrieves documents from the vector store based on the given query.
-
-        Args:
-            query: The query string to search for relevant documents.
-
-        Returns:
-            List of documents matching the query.
-        """
+    async def retrieve_documents(self,
+                                 query: str,
+                                 k: int,
+                                 sim_thresh: float) -> list[Document]:
+        """Retrieves documents from the vector store based on the given query."""
 
         _logger().debug('Retrieving documents from collection \'%s\' for query: \'%s\'',
                         self._cfg.collection_name, query)
 
-        return []
+        docs = self._client.query_points(
+            collection_name=self._cfg.collection_name,
+            query=await self._embedding_model.aembed_query(query),
+            limit=k,
+            score_threshold=sim_thresh
+        )
+
+        return [
+            Document(page_content=point.payload['content'],
+                     metadata=point.payload['metadata'])
+            for point in docs.points
+            if point.payload is not None
+        ]
 
     def _ensure_collection_exists(self) -> None:
         """Ensures that the specified collection exists in the Qdrant vector store."""
