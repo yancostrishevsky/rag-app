@@ -66,6 +66,7 @@ jobs:
     if: needs.changes.outputs.context-retriever == 'true'
     env:
       DEVCONTAINER_CONFIG: services/context-retriever/.devcontainer/devcontainer.json
+      SERVICE_WORKDIR: /home/appuser/workspace/services/context-retriever
     steps: &precommit_steps
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -80,7 +81,7 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           configFile: ${{ env.DEVCONTAINER_CONFIG }}
-          runCmd: ${{ env.PRECOMMIT_CMD }}
+          runCmd: bash -lc "cd ${{ env.SERVICE_WORKDIR }} && ${{ env.PRECOMMIT_CMD }}"
 
   precommit-web-app:
     name: Pre-commit (web-app)
@@ -89,6 +90,7 @@ jobs:
     if: needs.changes.outputs.web-app == 'true'
     env:
       DEVCONTAINER_CONFIG: .devcontainer/web-app/devcontainer.json
+      SERVICE_WORKDIR: /home/appuser/workspace/services/web-app
     steps: *precommit_steps
 
   precommit-llm-proxy:
@@ -98,4 +100,5 @@ jobs:
     if: needs.changes.outputs.llm-proxy == 'true'
     env:
       DEVCONTAINER_CONFIG: .devcontainer/llm-proxy/devcontainer.json
+      SERVICE_WORKDIR: /home/appuser/workspace/services/llm-proxy
     steps: *precommit_steps
