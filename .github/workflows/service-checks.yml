@@ -45,11 +45,12 @@ jobs:
               - "pyproject.toml"
 
   precommit-context-retriever:
+    runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.context_retriever == 'true'
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Run just run-precommit (devcontainer)
         uses: devcontainers/ci@v0.3
         with:
@@ -57,11 +58,12 @@ jobs:
           runCmd: just run-precommit
 
   precommit-llm-proxy:
+    runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.llm_proxy == 'true'
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Run just run-precommit (devcontainer)
         uses: devcontainers/ci@v0.3
         with:
@@ -75,10 +77,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Provide dummy SSH_AUTH_SOCK for devcontainer mounts
+        run: |
+          mkdir -p /tmp
+          touch /tmp/ssh-agent.sock
+
       - name: Run just run-precommit (devcontainer)
         uses: devcontainers/ci@v0.3
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh-agent.sock
         with:
           subFolder: services/web-app
           configFile: .devcontainer/web-app/devcontainer.json
           runCmd: just run-precommit
-
