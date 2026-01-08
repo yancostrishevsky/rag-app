@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 env:
-  PRECOMMIT_CMD: just run-precommit
+  PRECOMMIT_CMD: just setup-environment && just run-precommit
   SSH_AUTH_SOCK: /tmp/ssh-agent
 
 jobs:
