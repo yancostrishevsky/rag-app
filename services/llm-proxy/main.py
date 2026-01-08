@@ -54,24 +54,69 @@ async def read_ping() -> dict[str, str]:
     return {'message': 'Service is running'}
 
 
+class ConversationState(pydantic.BaseModel):
+    """State of the chat conversation including chat history and current user query."""
+    chat_history: list[dict[str, Any]]
+    user_message: str
+
+
 class RequestStreamChatResponse(pydantic.BaseModel):
     """Request to return the LLM response for a given query and retrieved context."""
-    user_message: str
-    chat_history: list[dict[str, Any]]
+    conversation_state: ConversationState
     context_docs: list[dict[str, Any]]
 
 
 @app.post('/stream_chat_response')
 async def stream_chat_response(request: RequestStreamChatResponse) -> StreamingResponse:
-    """Streams chat response for the user query based on the provided context."""
+    """Streams chat response for the user query based on the provided context.
+
+    The conversation is expected to be safe i.e. no input rails are fired during handling
+    the request. In order to use the input guardrails, the client should call relevant
+    endpoints.
+    """
 
     assert llm_service is not None
 
     return StreamingResponse(
-        llm_service.stream_chat_response(request.user_message,
-                                         chat_history=request.chat_history,
+        llm_service.stream_chat_response(request.conversation_state.user_message,
+                                         chat_history=request.conversation_state.chat_history,
                                          context_documents=request.context_docs),
         media_type='application/json')
+
+
+class ResponseInputCheck(pydantic.BaseModel):
+    """Response containing the status of input guardrails check."""
+
+    is_ok: bool
+    reason: str | None = None
+
+
+@app.post('/check_input_safety')
+async def check_input_safety(request: ConversationState) -> ResponseInputCheck:
+    """Fires the internal safety guardrails on the current conversation state."""
+
+    assert llm_service is not None
+
+    is_ok, reason = await llm_service.check_input_safety(
+        user_query=request.user_message,
+        chat_history=request.chat_history
+    )
+
+    return ResponseInputCheck(is_ok=is_ok, reason=reason)
+
+
+@app.post('/check_input_relevance')
+async def check_input_relevance(request: ConversationState) -> ResponseInputCheck:
+    """Fires the internal guardrails responsible for checking the relevance of the user input."""
+
+    assert llm_service is not None
+
+    is_ok, reason = await llm_service.check_input_relevance(
+        user_query=request.user_message,
+        chat_history=request.chat_history
+    )
+
+    return ResponseInputCheck(is_ok=is_ok, reason=reason)
 
 
 def _configure_logging(script_cfg: omegaconf.DictConfig) -> None:
