@@ -8,7 +8,9 @@ RUN apt-get update && \
 
 RUN wget -qO- https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 
-COPY . /app
+COPY cfg /app/cfg
+COPY src /app/src
+COPY pyproject.toml main.py /app/
 WORKDIR /app
 
 EXPOSE ${API_PORT}
