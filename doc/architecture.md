@@ -94,9 +94,9 @@ An intelligent orchestrator for Large Language Models.
 | **Deployment** | **Docker / Docker Compose** | Containerization and multi-service orchestration. |
 | **Workflow** | **Just** | Command runner for simplified development tasks. |
 
-### 5. Key Architecture Features
+---
 
-Warto dodać te punkty, aby pokazać, że projekt jest "przemyślany":
+### 5. Key Architecture Features
 
 * **Asynchronous Communication:** Services communicate using `httpx` and `FastAPI`'s async capabilities to handle streaming without blocking.
 * **Scalability:** Each component (LLM, Vector Store, Proxy) is a separate container, allowing them to be scaled or replaced independently.
@@ -106,8 +106,6 @@ Warto dodać te punkty, aby pokazać, że projekt jest "przemyślany":
 ---
 
 ### 6. Suggested Improvements (Roadmap)
-
-Dodanie tej sekcji pokaże Twojemu prowadzącemu/koledze, że widzisz pole do rozwoju:
 
 * **Support for more formats:** Adding `.docx` or `.html` support in `context-retriever`.
 * **Evaluation module:** Implementing a framework to test the quality of RAG answers.
