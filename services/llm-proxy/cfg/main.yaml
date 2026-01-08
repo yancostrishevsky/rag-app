@@ -11,3 +11,7 @@ models:
   conversation_safety_guardrail:
     model: local_ollama_model
     base_url: http://guard-llm:11435
+
+  input_relevance_guardrail:
+    model: local_ollama_model
+    base_url: http://guard-llm:11435
