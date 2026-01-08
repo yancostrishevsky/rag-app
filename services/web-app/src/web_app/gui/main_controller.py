@@ -146,7 +146,7 @@ class MainController:
 
         for docs in self._documents_retrieval_history:
 
-            docs_repr = (self._DOC_MD_TEMPLATE.format(title=doc.title,
+            docs_repr = (self._DOC_MD_TEMPLATE.format(title=doc.metadata['title'],
                                                       content=doc.content)
                          for doc in docs)
 

@@ -20,6 +20,12 @@ services:
       - LLM_GENERATOR_MODEL=llama3.1:8b
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11434
+    healthcheck:
+      test: curl -s http://localhost:11434/api/tags | grep '"model":"local_ollama_model:latest"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
 
   guard-llm:
     build:
@@ -39,7 +45,142 @@ services:
       - LLM_GENERATOR_MODEL=dolphin3:8b
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11435
+    healthcheck:
+      test: curl -s http://localhost:11435/api/tags | grep '"model":"local_ollama_model:latest"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+
+  helper-llm:
+    build:
+      context: services/llm-endpoint/
+      dockerfile: llm-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11434
+
+    container_name: helper-llm
+    ports:
+      - 11437:11437
+    volumes:
+      - ./persist_dir/helper-llm:/root/.ollama
+    networks:
+      - rag-net
+    environment:
+      - LLM_GENERATOR_MODEL=dolphin3:8b
+      - OLLAMA_DEBUG=0
+      - OLLAMA_HOST=0.0.0.0:11437
+    healthcheck:
+      test: curl -s http://localhost:11437/api/tags | grep '"model":"local_ollama_model:latest"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+
+  vector-store:
+    build:
+      context: services/vector-store/
+      dockerfile: vector-store.Dockerfile
+      args:
+        EXPOSED_PORT_REST: 6333
+        EXPOSED_PORT_GRPC: 6334
+
+    container_name: vector-store
+    ports:
+      - 6333:6333
+      - 6334:6334
+    volumes:
+      - ./persist_dir/vector-store:/qdrant/storage:z
+    networks:
+      - rag-net
+    healthcheck:
+      test: curl --fail http://localhost:6333/livez || exit 1
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  embedding-endpoint:
+    build:
+      context: services/embedding-endpoint/
+      dockerfile: embedding-endpoint.Dockerfile
+      args:
+        EXPOSED_PORT: 11436
     
+    container_name: embedding-endpoint
+    ports:
+      - 11436:11436
+    volumes:
+      - ./persist_dir/embedding-endpoint:/root/.ollama
+    networks:
+      - rag-net
+    environment:
+      - EMBEDDING_MODEL=nomic-embed-text:v1.5
+      - OLLAMA_DEBUG=0
+      - OLLAMA_HOST=0.0.0.0:11436
+    healthcheck:
+      test: curl -s http://localhost:11436/api/tags | grep '"model":"nomic-embed-text:v1.5"'
+      interval: 5m
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+
+  web-app:
+    build:
+      context: services/web-app/
+      dockerfile: web-app.Dockerfile
+      args:
+        WEB_APP_PORT: 8080
+
+    container_name: web-app
+    ports:
+      - 8080:8080
+    volumes:
+      - ./persist_dir/web-app:/app/data
+    networks:
+      - rag-net
+
+  context-retriever:
+    build:
+      context: services/context-retriever/
+      dockerfile: context-retriever.Dockerfile
+      args:
+        API_PORT: 8899
+
+    container_name: context-retriever
+    ports:
+      - 8899:8899
+    volumes:
+      - ./persist_dir/context-retriever:/app/data
+    networks:
+      - rag-net
+    depends_on:
+      vector-store:
+        condition: service_healthy
+      embedding-endpoint:
+        condition: service_healthy
+      main-llm-responder:
+        condition: service_healthy
+
+  llm-proxy:
+    build:
+      context: services/llm-proxy/
+      dockerfile: llm-proxy.Dockerfile
+      args:
+        API_PORT: 8888
+
+    container_name: llm-proxy
+    ports:
+      - 8888:8888
+    volumes:
+      - ./persist_dir/llm-proxy:/app/data
+    networks:
+      - rag-net
+    depends_on:
+      main-llm-responder:
+        condition: service_healthy
+      guard-llm:
+        condition: service_healthy
 
 networks:
   rag-net:

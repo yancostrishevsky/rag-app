@@ -1,13 +1,13 @@
 ---
 server_host: 0.0.0.0
-server_port: 8080
+server_port: 8888
 n_server_workers: 1
 persist_data_path: data/
 models:
   main_chat:
     model: local_ollama_model
-    base_url: http://localhost:11434
+    base_url: http://main-llm-responder:11434
 
   conversation_safety_guardrail:
     model: local_ollama_model
-    base_url: http://localhost:11435
+    base_url: http://guard-llm:11435

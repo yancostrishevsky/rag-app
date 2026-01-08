@@ -1,0 +1,19 @@
+---
+server_host: 0.0.0.0
+server_port: 8899
+n_server_workers: 1
+persist_data_path: data/
+doc_processing:
+  chunk_size: 2000
+  chunk_overlap: 400
+doc_retrieval:
+  max_context_docs: 3
+  similarity_threshold: 0.6
+  helper_llm:
+    model_name: local_ollama_model
+    url: http://helper-llm:11437
+    temperature: 0.2
+
+
+defaults:
+  - vector_store: qdrant
