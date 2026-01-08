@@ -9,6 +9,7 @@ on:
       - services/context-retriever/**
       - services/web-app/**
       - services/llm-proxy/**
+      - .devcontainer/**
   push:
     paths:
       - .github/workflows/service-checks.yml
@@ -17,6 +18,7 @@ on:
       - services/context-retriever/**
       - services/web-app/**
       - services/llm-proxy/**
+      - .devcontainer/**
 
 permissions:
   contents: read
@@ -48,16 +50,22 @@ jobs:
               - .pre-commit-config.yaml
               - pyproject.toml
               - .github/workflows/service-checks.yml
+              - .devcontainer/context-retriever/**
+              - .devcontainer/scripts/**
             web-app:
               - services/web-app/**
               - .pre-commit-config.yaml
               - pyproject.toml
               - .github/workflows/service-checks.yml
+              - .devcontainer/web-app/**
+              - .devcontainer/scripts/**
             llm-proxy:
               - services/llm-proxy/**
               - .pre-commit-config.yaml
               - pyproject.toml
               - .github/workflows/service-checks.yml
+              - .devcontainer/llm-proxy/**
+              - .devcontainer/scripts/**
 
   precommit-context-retriever:
     name: Pre-commit (context-retriever)
