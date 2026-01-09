@@ -1,6 +1,5 @@
 """Contains implementation of service that communicates with the context retriever module."""
 import logging
-from typing import List
 
 import requests
 from web_app.backend import utils
@@ -18,11 +17,11 @@ class ContextRetrieverService:
         self._endpoint_cfg = endpoint_cfg
 
         _logger().info('Created service for context-retriever with cfg: %s',
-                        endpoint_cfg)
+                       endpoint_cfg)
 
     def collect_context_info(self,
                              user_message: str,
-                             chat_history: utils.ChatHistory) -> List[utils.ContextDocument]:
+                             chat_history: utils.ChatHistory) -> list[utils.ContextDocument]:
         """Collects context information based on the user's message and chat history.
 
         Args:

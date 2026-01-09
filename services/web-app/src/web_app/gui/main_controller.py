@@ -1,11 +1,8 @@
 """Contains GUI related utils."""
 import logging
 from typing import Any
-from typing import Dict
 from typing import Iterator
-from typing import List
-from typing import Optional
-from typing import Tuple
+import requests
 
 import gradio as gr
 from web_app.backend import context_retriever
@@ -39,7 +36,7 @@ class MainController:
         self._context_retriever_service = context_retriever_service
         self._llm_proxy_service = llm_proxy_service
 
-        self._documents_retrieval_history: List[List[utils.ContextDocument]] = []
+        self._documents_retrieval_history: list[list[utils.ContextDocument]] = []
 
     def render_gui(self) -> None:
         """Renders the UI for application and assigns the necessary callbacks."""
@@ -142,7 +139,7 @@ class MainController:
     def _create_retrieved_docs_representation(self) -> gr.Markdown:
         """Concatenates the documents retrieved till now and returns their Markdown repr."""
 
-        retrieval_history_reprs: List[str] = []
+        retrieval_history_reprs: list[str] = []
 
         for docs in self._documents_retrieval_history:
 

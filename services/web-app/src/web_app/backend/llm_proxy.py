@@ -1,9 +1,7 @@
 """Contains service that communicates with the llm-proxy module."""
 import json
 import logging
-from typing import Dict
 from typing import Iterator
-from typing import List
 
 import httpx
 from web_app.backend import utils
@@ -21,12 +19,12 @@ class LLMProxyService:
         self._endpoint_cfg = endpoint_cfg
 
         _logger().info('Created service for llm-proxy with cfg: %s',
-                        endpoint_cfg)
+                       endpoint_cfg)
 
     def stream_chat_response(self,
                              user_message: str,
                              chat_history: utils.ChatHistory,
-                             context_docs: List[utils.ContextDocument]) -> Iterator[Dict[str, str]]:
+                             context_docs: list[utils.ContextDocument]) -> Iterator[dict[str, str]]:
         """Collects LLM response based on the context and streams it.
 
         Args:
