@@ -8,6 +8,7 @@ from web_app.backend import context_retriever
 from web_app.backend import llm_proxy
 from web_app.gui import main_controller
 from web_app.gui import utils as gui_utils
+from web_app.backend import utils as backend_utils
 
 
 def _logger() -> logging.Logger:
@@ -44,11 +45,11 @@ logging.config.dictConfig({
 })
 
 context_retriever_service = context_retriever.ContextRetrieverService(
-    cfg.context_retriever_url
+    endpoint_cfg=backend_utils.EndpointConnectionCfg(**cfg.context_retriever_cfg)
 )
 
 llm_proxy_service = llm_proxy.LLMProxyService(
-    cfg.llm_proxy_url
+    endpoint_cfg=backend_utils.EndpointConnectionCfg(**cfg.llm_proxy_cfg)
 )
 
 with gr.Blocks(fill_height=True, title='AGH Chat', css=gui_utils.CUSTOM_CSS) as web_application:
