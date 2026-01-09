@@ -2,9 +2,9 @@
 import json
 import logging
 from typing import Iterator
-import requests
 
 import httpx
+import requests
 from web_app.backend import utils
 
 

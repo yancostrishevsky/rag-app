@@ -1,10 +1,8 @@
 """Contains implementation of service that communicates with the context retriever module."""
 import logging
 
-import requests
-
 import magic
-
+import requests
 from web_app.backend import utils
 
 

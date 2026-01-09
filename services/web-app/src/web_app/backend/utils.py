@@ -1,7 +1,7 @@
 """Contains utilities used by the backend services."""
 import dataclasses
-from typing import TypeAlias
 from typing import Any
+from typing import TypeAlias
 
 import pydantic
 
@@ -41,7 +41,7 @@ class InputCheckResult:
     """Result of input safety, or relevance check."""
 
     is_ok: bool
-    reason: str | None = None
+    reason: str
 
 
 UnstructuredChatHistory: TypeAlias = list[dict[str, str]]

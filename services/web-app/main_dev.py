@@ -6,9 +6,9 @@ import hydra
 import omegaconf
 from web_app.backend import context_retriever
 from web_app.backend import llm_proxy
+from web_app.backend import utils as backend_utils
 from web_app.gui import main_controller
 from web_app.gui import utils as gui_utils
-from web_app.backend import utils as backend_utils
 
 
 def _logger() -> logging.Logger:

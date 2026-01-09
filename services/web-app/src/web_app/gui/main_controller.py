@@ -1,10 +1,9 @@
 """Contains GUI related utils."""
 import logging
 from typing import Iterator
-import requests
 
 import gradio as gr
-
+import requests
 from web_app.backend import context_retriever
 from web_app.backend import llm_proxy
 from web_app.backend import utils

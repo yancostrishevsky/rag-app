@@ -8,11 +8,11 @@ from typing import AsyncIterator
 from typing import Dict
 from typing import List
 
+import fastapi
 import hydra
 import omegaconf
 import pydantic
 import uvicorn
-import fastapi
 from fastapi.responses import StreamingResponse
 
 
