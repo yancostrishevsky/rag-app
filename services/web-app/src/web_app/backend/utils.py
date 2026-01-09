@@ -1,8 +1,6 @@
 """Contains utilities used by the backend services."""
 import dataclasses
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import TypeAlias
 
 import pydantic
@@ -13,6 +11,7 @@ class EndpointConnectionCfg(pydantic.BaseModel):
 
     url: str
     connection_timeout: float
+
 
 @dataclasses.dataclass
 class ChatMessage:
@@ -26,7 +25,7 @@ class ChatMessage:
 class ChatHistory:
     """Contains history of messages in a chat session."""
 
-    messages: List[ChatMessage]
+    messages: list[ChatMessage]
 
 
 @dataclasses.dataclass
@@ -34,11 +33,20 @@ class ContextDocument:
     """Represents a single document retrieved from the doc store."""
 
     content: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
-UnstructuredChatHistory: TypeAlias = List[Dict[str, Any]]
 
-UnstructuredContextDocs: TypeAlias = List[Dict[str, Any]]
+@dataclasses.dataclass
+class InputCheckResult:
+    """Result of input safety, or relevance check."""
+
+    is_ok: bool
+    reason: str
+
+
+UnstructuredChatHistory: TypeAlias = list[dict[str, str]]
+
+UnstructuredContextDocs: TypeAlias = list[dict[str, Any]]
 
 
 def chat_history_to_payload(chat_history: ChatHistory) -> UnstructuredChatHistory:
@@ -52,7 +60,7 @@ def chat_history_to_payload(chat_history: ChatHistory) -> UnstructuredChatHistor
     ]
 
 
-def context_docs_to_payload(context_docs: List[ContextDocument]) -> UnstructuredContextDocs:
+def context_docs_to_payload(context_docs: list[ContextDocument]) -> UnstructuredContextDocs:
     """Converts context docs into json representation."""
 
     return [

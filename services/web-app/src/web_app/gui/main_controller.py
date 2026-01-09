@@ -1,13 +1,9 @@
 """Contains GUI related utils."""
 import logging
-from typing import Any
-from typing import Dict
 from typing import Iterator
-from typing import List
-from typing import Optional
-from typing import Tuple
 
 import gradio as gr
+import requests
 from web_app.backend import context_retriever
 from web_app.backend import llm_proxy
 from web_app.backend import utils
@@ -39,7 +35,7 @@ class MainController:
         self._context_retriever_service = context_retriever_service
         self._llm_proxy_service = llm_proxy_service
 
-        self._documents_retrieval_history: List[List[utils.ContextDocument]] = []
+        self._documents_retrieval_history: list[list[utils.ContextDocument]] = []
 
     def render_gui(self) -> None:
         """Renders the UI for application and assigns the necessary callbacks."""
@@ -51,6 +47,12 @@ class MainController:
                     """
                     # Context
                     """
+                )
+
+                file_upload = gr.File(label='Upload Files for Context')
+
+                file_upload.upload(  # pylint: disable=no-member
+                    self._upload_file, file_upload, file_upload,
                 )
 
                 gr.Markdown(
@@ -67,82 +69,66 @@ class MainController:
 
             with gr.Column(elem_id='chat_column', scale=3):
 
-                gr.ChatInterface(
-                    self._chat_interface_callback,
-                    chatbot=gr.Chatbot(elem_id='agh_chat',
-                                       type='messages',
-                                       height='70vh',
-                                       show_copy_button=True),
-                    title='AGH Chat',
-                    type='messages',
-                    textbox=gr.Textbox(
-                        placeholder='Type a message...', label='Your message'),
-                    additional_outputs=[docs_list],
+                gr.Label('AGH Chat', elem_id='agh_chat_label', show_label=False)
+
+                chatbot = gr.Chatbot(elem_id='agh_chat',
+                                     type='messages',
+                                     height='70vh',
+                                     show_copy_button=True,
+                                     label='AGH Chat')
+                msg = gr.Textbox(placeholder='Type a message...', show_label=False)
+
+                msg.submit(  # pylint: disable=no-member
+                    self._move_user_msg_to_chat, [msg, chatbot], [msg, chatbot]
+                ).success(
+                    self._validate_user_msg, chatbot, chatbot
+                ).success(
+                    self._retrieve_and_store_docs, chatbot, None
+                ).success(
+                    self._stream_chat_response, chatbot, chatbot
+                ).success(
+                    self._create_retrieved_docs_representation, None, docs_list
                 )
 
-    def _chat_interface_callback(self,
-                                 user_message: str,
-                                 raw_history: Optional[utils.UnstructuredChatHistory],
-                                 ) -> Iterator[Tuple[Dict[str, Any], gr.Markdown]]:
-        """Main callback for the chat interface.
+    def _stream_chat_response(self,
+                              chat_history: utils.UnstructuredChatHistory,
+                              ) -> Iterator[utils.UnstructuredChatHistory]:
+        """Streams the chat response based on the chat history with the latest user msg."""
 
-        It first retrieves context docs from the context-retriever, updates the internal documents
-        storage and streams the llm-proxy response together with the markdown representation
-        of the retrieval history.
-        """
+        chat_history, user_message = chat_history[:-1], chat_history[-1]['content']
 
-        raw_history = raw_history or []
-
-        chat_history = utils.ChatHistory(
+        structured_history = utils.ChatHistory(
             [utils.ChatMessage(message['role'], message['content'])
-             for message in raw_history]
+             for message in chat_history]
         )
 
-        try:
-            context_docs = self._context_retriever_service.collect_context_info(
-                user_message=user_message,
-                chat_history=chat_history
-            )
+        full_response = ''
 
-            self._documents_retrieval_history.append(context_docs)
-
-        except Exception as e:
-            _logger().error('Failed to collect context info from backend.')
-            raise gr.Error('Failed to collect context info from backend.', duration=5) from e
-
-        context_docs_repr = self._create_retrieved_docs_representation()
-
-        for chat_message in self._stream_llm_response(user_message,
-                                                      chat_history,
-                                                      context_docs):
-            yield chat_message, context_docs_repr
-
-    def _stream_llm_response(self,
-                             user_message: str,
-                             chat_history: utils.ChatHistory,
-                             context_docs: List[utils.ContextDocument]) -> Iterator[Dict[str, Any]]:
-        """Yields concatenated chunks retrieved from the llm."""
-
-        chat_response = self._llm_proxy_service.stream_chat_response(
+        for chunk in self._llm_proxy_service.stream_chat_response(
             user_message=user_message,
-            chat_history=chat_history,
-            context_docs=context_docs
-        )
+            chat_history=structured_history,
+            context_docs=self._documents_retrieval_history[-1]
+        ):
 
-        full_text_response = ''
-        for chunk in chat_response:
+            if 'error' in chunk:
+                _logger().debug('Received error from llm-proxy: %s', chunk['error'])
 
-            full_text_response += chunk['content']
+                yield chat_history
+                self._documents_retrieval_history.pop()
 
-            yield {
-                'role': 'assistant',
-                'content': full_text_response
-            }
+                raise gr.Error(chunk['error'],
+                               title='Error while generating chat response',
+                               duration=None)
+
+            full_response += chunk['content']
+
+            yield chat_history + [{'role': 'user', 'content': user_message},
+                                  {'role': 'assistant', 'content': full_response}]
 
     def _create_retrieved_docs_representation(self) -> gr.Markdown:
         """Concatenates the documents retrieved till now and returns their Markdown repr."""
 
-        retrieval_history_reprs: List[str] = []
+        retrieval_history_reprs: list[str] = []
 
         for docs in self._documents_retrieval_history:
 
@@ -157,3 +143,99 @@ class MainController:
                           for i, repr in enumerate(retrieval_history_reprs))
 
         return gr.Markdown('\n---\n'.join(docs_list_repr))
+
+    def _move_user_msg_to_chat(self,
+                               user_message: str,
+                               chat_history: utils.UnstructuredChatHistory | None,
+                               ) -> tuple[str, utils.UnstructuredChatHistory]:
+        """Migrates the submitted user message to the chat history and resets the msg input."""
+
+        chat_history = chat_history or []
+
+        return '', chat_history + [{'role': 'user', 'content': user_message}]
+
+    def _retrieve_and_store_docs(self,
+                                 chat_history: utils.UnstructuredChatHistory,
+                                 ) -> None:
+        """Retrieves context documents and stores them internally."""
+
+        chat_history, user_message = chat_history[:-1], chat_history[-1]['content']
+
+        gr.Info('Collecting context documents...', duration=5)
+
+        try:
+            context_docs = self._context_retriever_service.collect_context_info(
+                user_message=user_message,
+                chat_history=utils.ChatHistory(
+                    [utils.ChatMessage(message['role'], message['content'])
+                     for message in chat_history]
+                )
+            )
+
+        except requests.HTTPError as e:
+            _logger().error('Failed to collect context info from backend: %s', e)
+
+            raise gr.Error('Failed to collect context info from backend.', duration=None)
+
+        self._documents_retrieval_history.append(context_docs)
+
+    def _validate_user_msg(self,
+                           chat_history: utils.UnstructuredChatHistory,
+                           ) -> Iterator[utils.UnstructuredChatHistory]:
+        """Validates the user message for safety and relevance."""
+
+        chat_history, user_message = chat_history[:-1], chat_history[-1]['content']
+
+        structured_history = utils.ChatHistory(
+            [utils.ChatMessage(message['role'], message['content'])
+             for message in chat_history]
+        )
+
+        gr.Info('Validating user message...', duration=5)
+
+        try:
+            safety_check = self._llm_proxy_service.check_input_safety(
+                user_message, structured_history)
+
+            if not safety_check.is_ok:
+                yield chat_history
+                raise gr.Error(safety_check.reason,
+                               title='Input Safety Check Failed',
+                               duration=None)
+
+            relevance_check = self._llm_proxy_service.check_input_relevance(
+                user_message, structured_history)
+
+            if not relevance_check.is_ok:
+                yield chat_history
+                raise gr.Error(relevance_check.reason,
+                               title='Input Relevance Check Failed',
+                               duration=None)
+
+        except requests.HTTPError as e:
+            _logger().error('Failed to validate user message: %s', e)
+
+            raise gr.Error('Failure while validating user message.', duration=None)
+
+        yield chat_history + [{'role': 'user', 'content': user_message}]
+
+    def _upload_file(self,
+                     uploaded_file_path: str) -> None:
+        """Uploads a file to the context retriever service."""
+
+        try:
+            upload_error = self._context_retriever_service.upload_file(uploaded_file_path)
+
+        except requests.HTTPError as e:
+            _logger().error('Failed to upload file to context retriever: %s', e)
+
+            raise gr.Error('Failed to upload a file.', duration=None)
+
+        if upload_error is not None:
+            _logger().error('Failed to upload file to context retriever: %s', upload_error)
+
+            raise gr.Error(upload_error,
+                           title='Failed to upload a file',
+                           duration=None)
+
+        gr.Success('File uploaded successfully!', duration=5)
