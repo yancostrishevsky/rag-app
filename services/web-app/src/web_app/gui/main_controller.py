@@ -117,7 +117,9 @@ class MainController:
                 yield chat_history
                 self._documents_retrieval_history.pop()
 
-                raise gr.Error(chunk['error'], duration=None)
+                raise gr.Error(chunk['error'],
+                               title='Error while generating chat response',
+                               duration=None)
 
             full_response += chunk['content']
 
@@ -198,7 +200,8 @@ class MainController:
 
             if not safety_check.is_ok:
                 yield chat_history
-                raise gr.Error(f'Input Safety Check Failed: {safety_check.reason}',
+                raise gr.Error(safety_check.reason,
+                               title='Input Safety Check Failed',
                                duration=None)
 
             relevance_check = self._llm_proxy_service.check_input_relevance(
@@ -206,7 +209,8 @@ class MainController:
 
             if not relevance_check.is_ok:
                 yield chat_history
-                raise gr.Error(f'Input Relevance Check Failed: {relevance_check.reason}',
+                raise gr.Error(relevance_check.reason,
+                               title='Input Relevance Check Failed',
                                duration=None)
 
         except requests.HTTPError as e:
@@ -231,6 +235,8 @@ class MainController:
         if upload_error is not None:
             _logger().error('Failed to upload file to context retriever: %s', upload_error)
 
-            raise gr.Error(f'Failed to upload file: {upload_error}', duration=None)
+            raise gr.Error(upload_error,
+                           title='Failed to upload a file',
+                           duration=None)
 
         gr.Success('File uploaded successfully!', duration=5)
