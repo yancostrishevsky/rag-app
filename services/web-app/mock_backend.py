@@ -131,6 +131,9 @@ class ResponseUploadDocument(pydantic.BaseModel):
 @app.post('/upload_pdf')
 async def upload_pdf(file: fastapi.UploadFile) -> ResponseUploadDocument:
 
+    if not file.filename.lower().endswith('.pdf'):
+        return ResponseUploadDocument(error='Only PDF files are supported.')
+
     return ResponseUploadDocument()
 
 
