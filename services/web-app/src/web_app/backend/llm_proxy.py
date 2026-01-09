@@ -44,8 +44,10 @@ class LLMProxyService:
         url = f"{self._endpoint_cfg.url}/stream_chat_response"
 
         payload = {
-            'user_message': user_message,
-            'chat_history': utils.chat_history_to_payload(chat_history),
+            'conversation_state': {
+                'user_message': user_message,
+                'chat_history': utils.chat_history_to_payload(chat_history)
+            },
             'context_docs': utils.context_docs_to_payload(context_docs)
         }
 
