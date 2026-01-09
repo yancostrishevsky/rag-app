@@ -4,8 +4,8 @@ server_port: 8899
 n_server_workers: 1
 persist_data_path: data/
 doc_processing:
-  chunk_size: 2000
-  chunk_overlap: 400
+  chunk_size: 1000
+  chunk_overlap: 200
 doc_retrieval:
   max_context_docs: 3
   similarity_threshold: 0.6
