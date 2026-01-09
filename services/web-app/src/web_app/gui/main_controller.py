@@ -1,10 +1,10 @@
 """Contains GUI related utils."""
 import logging
-from typing import Any
 from typing import Iterator
 import requests
 
 import gradio as gr
+
 from web_app.backend import context_retriever
 from web_app.backend import llm_proxy
 from web_app.backend import utils
@@ -48,6 +48,12 @@ class MainController:
                     """
                     # Context
                     """
+                )
+
+                file_upload = gr.File(label='Upload Files for Context')
+
+                file_upload.upload(  # pylint: disable=no-member
+                    self._upload_file, file_upload, file_upload,
                 )
 
                 gr.Markdown(
@@ -209,3 +215,22 @@ class MainController:
             raise gr.Error('Failure while validating user message.', duration=None)
 
         yield chat_history + [{'role': 'user', 'content': user_message}]
+
+    def _upload_file(self,
+                     uploaded_file_path: str) -> None:
+        """Uploads a file to the context retriever service."""
+
+        try:
+            upload_error = self._context_retriever_service.upload_file(uploaded_file_path)
+
+        except requests.HTTPError as e:
+            _logger().error('Failed to upload file to context retriever: %s', e)
+
+            raise gr.Error('Failed to upload a file.', duration=None)
+
+        if upload_error is not None:
+            _logger().error('Failed to upload file to context retriever: %s', upload_error)
+
+            raise gr.Error(f'Failed to upload file: {upload_error}', duration=None)
+
+        gr.Success('File uploaded successfully!', duration=5)

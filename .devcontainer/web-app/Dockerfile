@@ -10,7 +10,8 @@ RUN apt-get update && \
       git \
       openssh-client \
       sudo \
-      just
+      just \
+      libmagic1
 
 RUN groupadd -g 1000 appuser && useradd appuser -u 1000 -g 1000 -m -s /bin/bash
 RUN chown -R appuser:appuser /home/appuser/
