@@ -204,8 +204,8 @@ class MainController:
                                duration=None)
 
         except requests.HTTPError as e:
-            _logger().error('Failed to validate user message from backend: %s', e)
+            _logger().error('Failed to validate user message: %s', e)
 
-            raise gr.Error('Failed to validate user message from backend.', duration=None)
+            raise gr.Error('Failure while validating user message.', duration=None)
 
         yield chat_history + [{'role': 'user', 'content': user_message}]

@@ -2,6 +2,7 @@
 import json
 import logging
 from typing import Iterator
+import requests
 
 import httpx
 from web_app.backend import utils
@@ -64,7 +65,7 @@ class LLMProxyService:
         """Sends the conversation state to the llm-proxy to check input safety.
 
         Raises:
-            httpx.HTTPStatusError: If the request to the llm-proxy fails.
+            requests.HTTPError: If the request to the llm-proxy fails.
         """
 
         _logger().debug(('Checking input safety with user_message: %s, chat_history: %s'),
@@ -83,7 +84,7 @@ class LLMProxyService:
         """Sends the conversation state to the llm-proxy to check input relevance.
 
         Raises:
-              httpx.HTTPStatusError: If the request to the llm-proxy fails.
+              requests.HTTPError: If the request to the llm-proxy fails.
         """
 
         _logger().debug(('Checking input relevance with user_message: %s, chat_history: %s'),
@@ -107,9 +108,14 @@ class LLMProxyService:
             'chat_history': utils.chat_history_to_payload(chat_history)
         }
 
-        response = httpx.post(url,
-                              json=payload,
-                              timeout=self._endpoint_cfg.connection_timeout)
+        try:
+            response = requests.post(url,
+                                     json=payload,
+                                     timeout=self._endpoint_cfg.connection_timeout)
+
+        except requests.exceptions.ConnectionError as e:
+            _logger().error('Connection error while connecting to llm-proxy: %s', e)
+            raise requests.HTTPError('Connection error while connecting to llm-proxy.') from e
 
         response.raise_for_status()
 
