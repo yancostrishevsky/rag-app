@@ -1376,6 +1376,7 @@ source = { editable = "." }
 dependencies = [
     { name = "gradio" },
     { name = "hydra-core" },
+    { name = "python-magic" },
     { name = "requests" },
 ]
 
@@ -1386,7 +1387,6 @@ dev = [
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pylint" },
-    { name = "python-magic" },
     { name = "uvicorn" },
 ]
 
@@ -1399,7 +1399,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.5.0" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=4.0.4" },
-    { name = "python-magic", marker = "extra == 'dev'", specifier = ">=0.4.27" },
+    { name = "python-magic", specifier = ">=0.4.27" },
     { name = "requests", specifier = "==2.32.3" },
     { name = "uvicorn", marker = "extra == 'dev'", specifier = "==0.34.3" },
 ]

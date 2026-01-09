@@ -1,7 +1,7 @@
 """Contains modules performing LLM-related isolated actions."""
+import logging
 from typing import Any
 from typing import AsyncIterator
-import logging
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage
@@ -121,7 +121,9 @@ class SimpleConversationValidateAction:
         _logger().debug('Validation LLM raw response:\n%s', decision)
 
         if len(decision_lines) != 2:
-            return False, 'Validation LLM returned an invalid response format.'
+            _logger().error('Unexpected number of lines in validation response: %d',
+                            len(decision_lines))
+            return False, 'Internal system error during conversation validation.'
 
         if decision_lines[0].lower() == self._good_keyword.lower():
             return True, None
