@@ -36,6 +36,14 @@ class ContextDocument:
     metadata: dict[str, Any]
 
 
+@dataclasses.dataclass
+class InputCheckResult:
+    """Result of input safety, or relevance check."""
+
+    is_ok: bool
+    reason: str | None = None
+
+
 UnstructuredChatHistory: TypeAlias = list[dict[str, str]]
 
 UnstructuredContextDocs: TypeAlias = list[dict[str, Any]]

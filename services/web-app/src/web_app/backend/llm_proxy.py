@@ -56,3 +56,62 @@ class LLMProxyService:
                           timeout=self._endpoint_cfg.connection_timeout) as stream:
             for chunk in stream.iter_bytes():
                 yield json.loads(chunk.decode('utf-8'))
+
+    def check_input_safety(self,
+                           user_message: str,
+                           chat_history: utils.ChatHistory,
+                           ) -> utils.InputCheckResult:
+        """Sends the conversation state to the llm-proxy to check input safety.
+
+        Raises:
+            httpx.HTTPStatusError: If the request to the llm-proxy fails.
+        """
+
+        _logger().debug(('Checking input safety with user_message: %s, chat_history: %s'),
+                        user_message, chat_history)
+
+        return self._sanitize_input(
+            user_message=user_message,
+            chat_history=chat_history,
+            url=f"{self._endpoint_cfg.url}/check_input_safety"
+        )
+
+    def check_input_relevance(self,
+                              user_message: str,
+                              chat_history: utils.ChatHistory,
+                              ) -> utils.InputCheckResult:
+        """Sends the conversation state to the llm-proxy to check input relevance.
+
+        Raises:
+              httpx.HTTPStatusError: If the request to the llm-proxy fails.
+        """
+
+        _logger().debug(('Checking input relevance with user_message: %s, chat_history: %s'),
+                        user_message, chat_history)
+
+        return self._sanitize_input(
+            user_message=user_message,
+            chat_history=chat_history,
+            url=f"{self._endpoint_cfg.url}/check_input_relevance"
+        )
+
+    def _sanitize_input(self,
+                        user_message: str,
+                        chat_history: utils.ChatHistory,
+                        url: str,
+                        ) -> utils.InputCheckResult:
+        """Sends the conversations state to a chosen llm-proxy guardrail endpoints."""
+
+        payload = {
+            'user_message': user_message,
+            'chat_history': utils.chat_history_to_payload(chat_history)
+        }
+
+        response = httpx.post(url,
+                              json=payload,
+                              timeout=self._endpoint_cfg.connection_timeout)
+
+        response.raise_for_status()
+
+        resp_json = response.json()
+        return utils.InputCheckResult(is_ok=resp_json['is_ok'], reason=resp_json['reason'])

@@ -76,6 +76,8 @@ class MainController:
                 msg.submit(  # pylint: disable=no-member
                     self._move_user_msg_to_chat, [msg, chatbot], [msg, chatbot]
                 ).success(
+                    self._validate_user_msg, chatbot, chatbot
+                ).success(
                     self._retrieve_and_store_docs, chatbot, None
                 ).success(
                     self._stream_chat_response, chatbot, chatbot
@@ -169,3 +171,41 @@ class MainController:
             raise gr.Error('Failed to collect context info from backend.', duration=None)
 
         self._documents_retrieval_history.append(context_docs)
+
+    def _validate_user_msg(self,
+                           chat_history: utils.UnstructuredChatHistory,
+                           ) -> Iterator[utils.UnstructuredChatHistory]:
+        """Validates the user message for safety and relevance."""
+
+        chat_history, user_message = chat_history[:-1], chat_history[-1]['content']
+
+        structured_history = utils.ChatHistory(
+            [utils.ChatMessage(message['role'], message['content'])
+             for message in chat_history]
+        )
+
+        gr.Info('Validating user message...', duration=5)
+
+        try:
+            safety_check = self._llm_proxy_service.check_input_safety(
+                user_message, structured_history)
+
+            if not safety_check.is_ok:
+                yield chat_history
+                raise gr.Error(f'Input Safety Check Failed: {safety_check.reason}',
+                               duration=None)
+
+            relevance_check = self._llm_proxy_service.check_input_relevance(
+                user_message, structured_history)
+
+            if not relevance_check.is_ok:
+                yield chat_history
+                raise gr.Error(f'Input Relevance Check Failed: {relevance_check.reason}',
+                               duration=None)
+
+        except requests.HTTPError as e:
+            _logger().error('Failed to validate user message from backend: %s', e)
+
+            raise gr.Error('Failed to validate user message from backend.', duration=None)
+
+        yield chat_history + [{'role': 'user', 'content': user_message}]
