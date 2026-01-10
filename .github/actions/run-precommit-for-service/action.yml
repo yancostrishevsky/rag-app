@@ -1,0 +1,37 @@
+---
+name: Run Pre-commit for Service
+description: Set up a Dev-Container for a specific service and run pre-commit checks within that environment.
+
+inputs:
+  devcontainer-cfg-path:
+    description: Directory containing .devcontainer configuration for the service.
+    required: true
+  
+  service-workdir:
+    description: Working directory inside the Dev-Container where the service code resides.
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Verify Docker engine
+      run: docker version
+    
+    - name: Ensure SSH agent mount path exists
+      run: |
+        if [ ! -e "${SSH_AUTH_SOCK}" ]; then
+          touch "${SSH_AUTH_SOCK}"
+        fi
+    
+    - name: Run pre-commit in devcontainer
+      uses: devcontainers/ci@v0.3
+      with:
+        configFile: ${{ inputs.devcontainer-cfg-path }}/devcontainer.json
+        runCmd: | 
+          bash -lc "cd ${{ inputs.service-workdir }} && \
+            just setup-environment && \
+            just run-precommit

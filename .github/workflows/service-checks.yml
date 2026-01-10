@@ -40,6 +40,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Determine impacted services
         id: filter
         uses: dorny/paths-filter@v3
@@ -72,41 +73,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.context-retriever == 'true'
-    env:
-      DEVCONTAINER_CONFIG: .devcontainer/context-retriever/devcontainer.json
-      SERVICE_WORKDIR: /home/appuser/workspace/services/context-retriever
-    steps: &precommit_steps
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Verify Docker engine
-        run: docker version
-      - name: Ensure SSH agent mount path exists
-        run: |
-          if [ ! -e "${SSH_AUTH_SOCK}" ]; then
-            touch "${SSH_AUTH_SOCK}"
-          fi
-      - name: Run pre-commit in devcontainer
-        uses: devcontainers/ci@v0.3
+    steps:
+      - name: Run pre-commit for context-retriever
+        uses: ./.github/actions/run-precommit-for-service
         with:
-          configFile: ${{ env.DEVCONTAINER_CONFIG }}
-          runCmd: bash -lc "cd ${{ env.SERVICE_WORKDIR }} && ${{ env.PRECOMMIT_CMD }}"
+          devcontainer-cfg-path: .devcontainer/context-retriever
+          service-workdir: /home/appuser/workspace/services/context-retriever
+      
 
   precommit-web-app:
     name: Pre-commit (web-app)
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.web-app == 'true'
-    env:
-      DEVCONTAINER_CONFIG: .devcontainer/web-app/devcontainer.json
-      SERVICE_WORKDIR: /home/appuser/workspace/services/web-app
-    steps: *precommit_steps
+    steps:
+      - name: Run pre-commit for web-app
+        uses: ./.github/actions/run-precommit-for-service
+        with:
+          devcontainer-cfg-path: .devcontainer/web-app
+          service-workdir: /home/appuser/workspace/services/web-app
 
   precommit-llm-proxy:
     name: Pre-commit (llm-proxy)
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.llm-proxy == 'true'
-    env:
-      DEVCONTAINER_CONFIG: .devcontainer/llm-proxy/devcontainer.json
-      SERVICE_WORKDIR: /home/appuser/workspace/services/llm-proxy
-    steps: *precommit_steps
+    steps:
+      - name: Run pre-commit for llm-proxy
+        uses: ./.github/actions/run-precommit-for-service
+        with:
+          devcontainer-cfg-path: .devcontainer/llm-proxy
+          service-workdir: /home/appuser/workspace/services/llm-proxy
