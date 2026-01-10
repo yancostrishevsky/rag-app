@@ -17,6 +17,7 @@ runs:
   steps:
     - name: Verify Docker engine
       run: docker version
+      shell: bash
     
     - name: Ensure SSH agent mount path exists
       run: |
