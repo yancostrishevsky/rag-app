@@ -72,6 +72,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.context-retriever == 'true'
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Run pre-commit for context-retriever
         uses: ./.github/actions/run-precommit-for-service
         with:
@@ -85,6 +88,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.web-app == 'true'
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Run pre-commit for web-app
         uses: ./.github/actions/run-precommit-for-service
         with:
@@ -97,6 +103,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.llm-proxy == 'true'
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Run pre-commit for llm-proxy
         uses: ./.github/actions/run-precommit-for-service
         with:
