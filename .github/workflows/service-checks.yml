@@ -1,4 +1,5 @@
 name: Service Checks
+description: Run pre-commit static analysis on services having their own Dev-Container setup. 
 
 on:
   pull_request:
@@ -10,27 +11,24 @@ on:
       - services/web-app/**
       - services/llm-proxy/**
       - .devcontainer/**
-  push:
-    paths:
-      - .github/workflows/service-checks.yml
-      - .pre-commit-config.yaml
-      - pyproject.toml
-      - services/context-retriever/**
-      - services/web-app/**
-      - services/llm-proxy/**
-      - .devcontainer/**
+    branches: [main, develop]
 
 permissions:
   contents: read
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  PRECOMMIT_CMD: just setup-environment && just run-precommit
+  # Dummy socket to simulate mounting SSH agent into Dev-Container
   SSH_AUTH_SOCK: /tmp/ssh-agent
 
 jobs:
   changes:
     name: Detect changed services
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       context-retriever: ${{ steps.filter.outputs.context-retriever }}
       web-app: ${{ steps.filter.outputs.web-app }}
@@ -70,7 +68,7 @@ jobs:
 
   precommit-context-retriever:
     name: Pre-commit (context-retriever)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: changes
     if: needs.changes.outputs.context-retriever == 'true'
     steps:
@@ -83,7 +81,7 @@ jobs:
 
   precommit-web-app:
     name: Pre-commit (web-app)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: changes
     if: needs.changes.outputs.web-app == 'true'
     steps:
@@ -95,7 +93,7 @@ jobs:
 
   precommit-llm-proxy:
     name: Pre-commit (llm-proxy)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: changes
     if: needs.changes.outputs.llm-proxy == 'true'
     steps:
