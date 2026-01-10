@@ -1,78 +1,113 @@
-name: Service checks
+name: Service Checks
+description: Run pre-commit static analysis on services having their own Dev-Container setup. 
 
 on:
   pull_request:
     paths:
-      - "services/**"
-      - ".pre-commit-config.yaml"
-      - "pyproject.toml"
-      - ".github/workflows/service-checks.yml"
-  push:
+      - .github/workflows/service-checks.yml
+      - .pre-commit-config.yaml
+      - pyproject.toml
+      - services/context-retriever/**
+      - services/web-app/**
+      - services/llm-proxy/**
+      - .devcontainer/**
     branches: [main, develop]
-    paths:
-      - "services/**"
-      - ".pre-commit-config.yaml"
-      - "pyproject.toml"
-      - ".github/workflows/service-checks.yml"
 
 permissions:
   contents: read
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Dummy socket to simulate mounting SSH agent into Dev-Container
+  SSH_AUTH_SOCK: /tmp/ssh-agent
+
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    name: Detect changed services
+    runs-on: ubuntu-24.04
     outputs:
-      llm_proxy: ${{ steps.filter.outputs.llm_proxy }}
-      web_app: ${{ steps.filter.outputs.web_app }}
+      context-retriever: ${{ steps.filter.outputs.context-retriever }}
+      web-app: ${{ steps.filter.outputs.web-app }}
+      llm-proxy: ${{ steps.filter.outputs.llm-proxy }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine impacted services
         id: filter
+        uses: dorny/paths-filter@v3
         with:
           filters: |
-            llm_proxy:
-              - 'services/llm-proxy/**'
-              - '.pre-commit-config.yaml'
-              - 'pyproject.toml'
-            web_app:
-              - 'services/web-app/**'
-              - '.pre-commit-config.yaml'
-              - 'pyproject.toml'
+            context-retriever:
+              - services/context-retriever/**
+              - .pre-commit-config.yaml
+              - pyproject.toml
+              - .github/workflows/service-checks.yml
+              - .devcontainer/context-retriever/**
+              - .devcontainer/scripts/**
+            web-app:
+              - services/web-app/**
+              - .pre-commit-config.yaml
+              - pyproject.toml
+              - .github/workflows/service-checks.yml
+              - .devcontainer/web-app/**
+              - .devcontainer/scripts/**
+            llm-proxy:
+              - services/llm-proxy/**
+              - .pre-commit-config.yaml
+              - pyproject.toml
+              - .github/workflows/service-checks.yml
+              - .devcontainer/llm-proxy/**
+              - .devcontainer/scripts/**
 
-  precommit-llm-proxy:
-    runs-on: ubuntu-latest
+  precommit-context-retriever:
+    name: Pre-commit (context-retriever)
+    runs-on: ubuntu-24.04
     needs: changes
-    if: needs.changes.outputs.llm_proxy == 'true'
+    if: needs.changes.outputs.context-retriever == 'true'
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run pre-commit for context-retriever
+        uses: ./.github/actions/run-precommit-for-service
         with:
-          python-version: "3.12"
-      - name: Install dependencies
-        working-directory: services/llm-proxy
-        run: |
-          uv venv
-          uv pip install -e ".[dev]"
-      - name: Run pre-commit
-        working-directory: services/llm-proxy
-        run: |
-          uv run pre-commit run -c ../../.pre-commit-config.yaml --files $(git -C ../.. ls-files services/llm-proxy)
+          devcontainer-cfg-path: .devcontainer/context-retriever
+          service-workdir: /home/appuser/workspace/services/context-retriever
+      
 
   precommit-web-app:
-    runs-on: ubuntu-latest
+    name: Pre-commit (web-app)
+    runs-on: ubuntu-24.04
     needs: changes
-    if: needs.changes.outputs.web_app == 'true'
+    if: needs.changes.outputs.web-app == 'true'
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run pre-commit for web-app
+        uses: ./.github/actions/run-precommit-for-service
         with:
-          python-version: "3.12"
-      - name: Install dependencies
-        working-directory: services/web-app
-        run: |
-          uv venv
-          uv pip install -e ".[dev]"
-      - name: Run pre-commit
-        working-directory: services/web-app
-        run: |
-          uv run pre-commit run -c ../../.pre-commit-config.yaml --files $(git -C ../.. ls-files services/web-app)
+          devcontainer-cfg-path: .devcontainer/web-app
+          service-workdir: /home/appuser/workspace/services/web-app
+
+  precommit-llm-proxy:
+    name: Pre-commit (llm-proxy)
+    runs-on: ubuntu-24.04
+    needs: changes
+    if: needs.changes.outputs.llm-proxy == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Run pre-commit for llm-proxy
+        uses: ./.github/actions/run-precommit-for-service
+        with:
+          devcontainer-cfg-path: .devcontainer/llm-proxy
+          service-workdir: /home/appuser/workspace/services/llm-proxy
