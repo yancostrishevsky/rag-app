@@ -31,6 +31,6 @@ runs:
       with:
         configFile: ${{ inputs.devcontainer-cfg-path }}/devcontainer.json
         runCmd: | 
-          bash -lc "cd ${{ inputs.service-workdir }} && \
+          cd ${{ inputs.service-workdir }} && \
             just setup-environment && \
             just run-precommit
