@@ -7,8 +7,6 @@ import sys
 # Configuration
 PROXY_URL = "http://localhost:8888"
 TIMEOUT = 180
-
-# Global list to store results for the final summary
 test_results = []
 
 # Test Dictionaries
@@ -58,7 +56,7 @@ def run_test_suite(name, questions, endpoint):
             print(f"⚠️ Connection error for question: {q[:20]}: {e}")
             
     accuracy = (correct / total) * 100
-    status = "PASS" if accuracy >= 80 else "FAIL" # Set 80% as passing threshold
+    status = "PASS" if accuracy >= 80 else "FAIL"
     test_results.append({"test": name, "result": f"{accuracy}% Accuracy", "status": status})
     print(f"SUMMARY {name}: {correct}/{total} ({accuracy}%) correct answers.")
     return accuracy
