@@ -1,0 +1,29 @@
+# --------------------------------------------------
+# This file contains setup scripts for the project.
+# For more info, see: https://github.com/casey/just
+# --------------------------------------------------
+
+set shell := ["bash", "-c"]
+
+# Setup virtual environment and install dependencies.
+setup-environment:
+    uv python install 3.12
+    uv venv
+    uv pip install -e .[dev]
+
+# Run the Gradio web application with live reloading.
+run-app-dev:
+    uv run gradio main_dev.py --watch-dirs . --demo-name web_application
+
+# Run the web application.
+run-app:
+    uv run python main.py
+
+# Run the mock backend server.
+run-mock-backend:
+    uv run python mock_backend.py
+
+# Runs static checks using global pre-commit configuration.
+run-precommit:
+    uv run --extra dev pre-commit run -c ../../.pre-commit-config.yaml \
+        --files `git ls-files --cached --others --exclude-standard`

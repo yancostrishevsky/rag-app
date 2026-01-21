@@ -1,0 +1,45 @@
+{
+  "name": "base",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "../.."
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"version": "latest",
+			"moby": false
+		}
+  },
+
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ubuntu/workspace,type=bind",
+  "workspaceFolder": "/home/ubuntu/workspace",
+
+  "mounts": [
+    "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent"
+  ],
+
+  "remoteUser": "ubuntu",
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent",
+    "GIT_CONFIG_GLOBAL": "/home/ubuntu/.gitconfig"
+  },
+
+  "overrideCommand": true,
+  "postCreateCommand": "/bin/bash .devcontainer/res/post_create_command.bash",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "skellock.just",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.autopep8",
+        "tamasfe.even-better-toml",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "mhutchie.git-graph",
+        "eamodio.gitlens"
+      ]
+    }
+  }
+}

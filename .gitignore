@@ -1,0 +1,5 @@
+.vscode/
+**/__pycache__/
+persistent_data/
+.venv/
+.mypy_cache/

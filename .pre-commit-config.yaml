@@ -1,0 +1,74 @@
+---
+repos:
+  # Official pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-docstring-first
+      - id: check-added-large-files
+      - id: check-yaml
+      - id: debug-statements
+      - id: double-quote-string-fixer
+      - id: check-executables-have-shebangs
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  # Ensures Python files are formatted using autopep8 formatter
+  - repo: local
+    hooks:
+      - id: autopep8
+        name: autopep8
+        entry: autopep8
+        language: system
+        types: [python]
+        args:
+          - "--in-place"
+          - "--aggressive"
+          - "--exit-code"
+          - "--max-line-length=100"
+
+  # Ensures python files are written using modern syntax
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+      - id: pyupgrade
+
+  # Ensures python imports are sorted according to (std, external, own) rule
+  - repo: https://github.com/asottile/reorder-python-imports
+    rev: v3.16.0
+    hooks:
+      - id: reorder-python-imports
+
+  # Ensures python files pass pylint checks
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+        args: [-rn, -sn]
+
+  # Performs Python static type check
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        types: [python]
+
+  # Ensures yaml files are formatted
+  - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+    rev: 0.2.3
+    hooks:
+      - id: yamlfmt
+        args: [--mapping, '2', --sequence, '4', --offset, '2']
+
+  # Ensures json files are valid. Supports Json with Comments
+  - repo: https://gitlab.com/bmares/check-json5
+    rev: v1.0.0
+    hooks:
+      - id: check-json5

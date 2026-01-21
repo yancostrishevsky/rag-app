@@ -1,0 +1,35 @@
+{
+  "name": "context-retriever",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "../.."
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/appuser/workspace,type=bind",
+  "workspaceFolder": "/home/appuser/workspace/services/context-retriever",
+  "mounts": [
+    "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent"
+  ],
+  "remoteUser": "appuser",
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent",
+    "GIT_CONFIG_GLOBAL": "/home/appuser/.gitconfig"
+  },
+  "runArgs": [
+    "--network=host"
+  ],
+  "overrideCommand": true,
+  "postCreateCommand": "cd /home/appuser/workspace && /bin/bash .devcontainer/res/post_create_command.bash",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "skellock.just",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.autopep8",
+        "tamasfe.even-better-toml",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "matangover.mypy"
+      ]
+    }
+  }
+}
