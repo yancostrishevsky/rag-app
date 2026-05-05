@@ -62,7 +62,7 @@ class ChatLLMService:
     async def check_input_safety(self,
                                  user_query: str,
                                  chat_history: list[dict[str, Any]],
-                                 ) -> tuple[bool, str | None]:
+                                 ) -> tuple[bool, str | None, str | None]:
         """Checks whether the conversation state passes the input safety guardrails."""
 
         _logger().debug('Checking input safety for query \'%s\' and conversation %s...',
@@ -76,12 +76,12 @@ class ChatLLMService:
             )
         )
 
-        return decision.should_pass, decision.reason
+        return decision.should_pass, decision.reason, decision.raw_response
 
     async def check_input_relevance(self,
                                     user_query: str,
                                     chat_history: list[dict[str, Any]],
-                                    ) -> tuple[bool, str | None]:
+                                    ) -> tuple[bool, str | None, str | None]:
         """Checks whether the conversation state passes the input relevance guardrails."""
 
         _logger().debug('Checking input relevance for query \'%s\' and conversation %s...',
@@ -95,4 +95,16 @@ class ChatLLMService:
             )
         )
 
-        return decision.should_pass, decision.reason
+        return decision.should_pass, decision.reason, decision.raw_response
+
+    def build_chat_debug_prompt(self,
+                                user_query: str,
+                                chat_history: list[dict[str, Any]],
+                                context_documents: list[dict[str, Any]] | None = None) -> str:
+        """Builds a readable preview of the chat prompt sent to the main model."""
+
+        return self._chat_response_action.build_debug_prompt(
+            user_query=user_query,
+            chat_history=chat_history,
+            context_documents=context_documents
+        )

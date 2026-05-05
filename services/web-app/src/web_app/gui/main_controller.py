@@ -16,8 +16,17 @@ def _logger() -> logging.Logger:
 class MainController:
     """Renders GUI elements and handles controller-view interactions."""
 
+    _NO_CONTEXT_RESPONSE = (
+        'I could not find supporting information for this question in the uploaded document '
+        'database. Please upload relevant documents or ask about information that is present in '
+        'the knowledge base.'
+    )
+
     _DOC_MD_TEMPLATE = """
 ### {title}
+
+Page: {page}
+Score: {score}
 
 {content}
 """
@@ -28,6 +37,44 @@ class MainController:
 {docs}
 """
 
+    _DEBUG_TURN_MD_TEMPLATE = """
+## Round {round_nr}
+
+### User Message
+{user_message}
+
+### Safety Check
+Status: {safety_status}
+Reason: {safety_reason}
+
+```text
+{safety_raw}
+```
+
+### Relevance Check
+Status: {relevance_status}
+Reason: {relevance_reason}
+
+```text
+{relevance_raw}
+```
+
+### Rewritten Query
+```text
+{rewritten_query}
+```
+
+### Prompt Preview
+```text
+{prompt_preview}
+```
+
+### Final Answer
+```text
+{final_response}
+```
+"""
+
     def __init__(self,
                  context_retriever_service: context_retriever.ContextRetrieverService,
                  llm_proxy_service: llm_proxy.LLMProxyService):
@@ -36,6 +83,7 @@ class MainController:
         self._llm_proxy_service = llm_proxy_service
 
         self._documents_retrieval_history: list[list[utils.ContextDocument]] = []
+        self._debug_history: list[utils.TurnDebugInfo] = []
 
     def render_gui(self) -> None:
         """Renders the UI for application and assigns the necessary callbacks."""
@@ -67,6 +115,18 @@ class MainController:
 
                     docs_list = gr.Markdown('Retrieved documents will be displayed here.')
 
+                gr.Markdown(
+                    """
+                    ## Debug Trace
+                    """
+                )
+
+                with gr.Column(elem_id='debug_trace',
+                               variant='panel',
+                               elem_classes='debug-trace'):
+
+                    debug_trace = gr.Markdown('Debug trace will be displayed here.')
+
             with gr.Column(elem_id='chat_column', scale=3):
 
                 gr.Label('AGH Chat', elem_id='agh_chat_label', show_label=False)
@@ -87,7 +147,7 @@ class MainController:
                 ).success(
                     self._stream_chat_response, chatbot, chatbot
                 ).success(
-                    self._create_retrieved_docs_representation, None, docs_list
+                    self._refresh_side_panels, None, [docs_list, debug_trace]
                 )
 
     def _stream_chat_response(self,
@@ -102,6 +162,12 @@ class MainController:
              for message in chat_history]
         )
 
+        if not self._documents_retrieval_history[-1]:
+            self._debug_history[-1].final_response = self._NO_CONTEXT_RESPONSE
+            yield chat_history + [{'role': 'user', 'content': user_message},
+                                  {'role': 'assistant', 'content': self._NO_CONTEXT_RESPONSE}]
+            return
+
         full_response = ''
 
         for chunk in self._llm_proxy_service.stream_chat_response(
@@ -115,6 +181,7 @@ class MainController:
 
                 yield chat_history
                 self._documents_retrieval_history.pop()
+                self._debug_history.pop()
 
                 raise gr.Error(chunk['error'],
                                title='Error while generating chat response',
@@ -125,15 +192,21 @@ class MainController:
             yield chat_history + [{'role': 'user', 'content': user_message},
                                   {'role': 'assistant', 'content': full_response}]
 
-    def _create_retrieved_docs_representation(self) -> gr.Markdown:
+        self._debug_history[-1].final_response = full_response
+
+    def _create_retrieved_docs_representation(self) -> str:
         """Concatenates the documents retrieved till now and returns their Markdown repr."""
 
         retrieval_history_reprs: list[str] = []
 
         for docs in self._documents_retrieval_history:
 
-            docs_repr = (self._DOC_MD_TEMPLATE.format(title=doc.metadata['title'],
-                                                      content=doc.content)
+            docs_repr = (self._DOC_MD_TEMPLATE.format(
+                title=doc.metadata.get('title', 'Unknown'),
+                page=doc.metadata.get('page', 'Unknown'),
+                score=(f'{doc.retrieval_score:.4f}'
+                       if doc.retrieval_score is not None else 'n/a'),
+                content=doc.content)
                          for doc in docs)
 
             retrieval_history_reprs.append('\n\n'.join(docs_repr))
@@ -142,7 +215,51 @@ class MainController:
                                                              docs=repr)
                           for i, repr in enumerate(retrieval_history_reprs))
 
-        return gr.Markdown('\n---\n'.join(docs_list_repr))
+        return '\n---\n'.join(docs_list_repr) or 'Retrieved documents will be displayed here.'
+
+    def _create_debug_trace_representation(self) -> str:
+        """Returns Markdown representation of the debug trace history."""
+
+        turns_repr = [
+            self._DEBUG_TURN_MD_TEMPLATE.format(
+                round_nr=i + 1,
+                user_message=turn.user_message,
+                safety_status=('PASS'
+                               if turn.safety_check is not None and turn.safety_check.is_ok
+                               else ('FAIL' if turn.safety_check is not None else 'PENDING')),
+                safety_reason=(turn.safety_check.reason
+                               if turn.safety_check is not None and turn.safety_check.reason
+                               else 'None'),
+                safety_raw=(turn.safety_check.raw_response
+                            if turn.safety_check is not None and turn.safety_check.raw_response
+                            else 'No raw response captured.'),
+                relevance_status=('PASS'
+                                  if turn.relevance_check is not None and turn.relevance_check.is_ok
+                                  else ('FAIL'
+                                        if turn.relevance_check is not None else 'PENDING')),
+                relevance_reason=(turn.relevance_check.reason
+                                  if turn.relevance_check is not None and turn.relevance_check.reason
+                                  else 'None'),
+                relevance_raw=(turn.relevance_check.raw_response
+                               if (turn.relevance_check is not None and
+                                   turn.relevance_check.raw_response)
+                               else 'No raw response captured.'),
+                rewritten_query=turn.rewritten_query or 'Not available.',
+                prompt_preview=turn.prompt_preview or 'Not available.',
+                final_response=turn.final_response or 'Not available.',
+            )
+            for i, turn in enumerate(self._debug_history)
+        ]
+
+        return '\n---\n'.join(turns_repr) or 'Debug trace will be displayed here.'
+
+    def _refresh_side_panels(self) -> tuple[str, str]:
+        """Returns refreshed content for retrieved docs and debug trace panels."""
+
+        return (
+            self._create_retrieved_docs_representation(),
+            self._create_debug_trace_representation()
+        )
 
     def _move_user_msg_to_chat(self,
                                user_message: str,
@@ -164,7 +281,7 @@ class MainController:
         gr.Info('Collecting context documents...', duration=5)
 
         try:
-            context_docs = self._context_retriever_service.collect_context_info(
+            retrieval_result = self._context_retriever_service.collect_context_info(
                 user_message=user_message,
                 chat_history=utils.ChatHistory(
                     [utils.ChatMessage(message['role'], message['content'])
@@ -177,7 +294,22 @@ class MainController:
 
             raise gr.Error('Failed to collect context info from backend.', duration=None)
 
-        self._documents_retrieval_history.append(context_docs)
+        self._documents_retrieval_history.append(retrieval_result.context_docs)
+        self._debug_history[-1].rewritten_query = retrieval_result.rewritten_query
+        self._debug_history[-1].context_docs = retrieval_result.context_docs
+
+        try:
+            self._debug_history[-1].prompt_preview = self._llm_proxy_service.build_chat_debug_prompt(
+                user_message=user_message,
+                chat_history=utils.ChatHistory(
+                    [utils.ChatMessage(message['role'], message['content'])
+                     for message in chat_history]
+                ),
+                context_docs=retrieval_result.context_docs
+            )
+        except requests.HTTPError as e:
+            _logger().error('Failed to build chat debug prompt: %s', e)
+            self._debug_history[-1].prompt_preview = 'Failed to build prompt preview.'
 
     def _validate_user_msg(self,
                            chat_history: utils.UnstructuredChatHistory,
@@ -197,6 +329,11 @@ class MainController:
             safety_check = self._llm_proxy_service.check_input_safety(
                 user_message, structured_history)
 
+            self._debug_history.append(utils.TurnDebugInfo(
+                user_message=user_message,
+                safety_check=safety_check
+            ))
+
             if not safety_check.is_ok:
                 yield chat_history
                 raise gr.Error(safety_check.reason,
@@ -205,6 +342,8 @@ class MainController:
 
             relevance_check = self._llm_proxy_service.check_input_relevance(
                 user_message, structured_history)
+
+            self._debug_history[-1].relevance_check = relevance_check
 
             if not relevance_check.is_ok:
                 yield chat_history

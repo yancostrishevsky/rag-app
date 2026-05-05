@@ -22,7 +22,7 @@ class ContextRetrieverService:
 
     def collect_context_info(self,
                              user_message: str,
-                             chat_history: utils.ChatHistory) -> list[utils.ContextDocument]:
+                             chat_history: utils.ChatHistory) -> utils.ContextRetrievalResult:
         """Collects context information based on the user's message and chat history.
 
         Args:
@@ -47,8 +47,16 @@ class ContextRetrieverService:
 
         response_data = response.json()
 
-        return [utils.ContextDocument(doc['content'], doc['metadata'])
-                for doc in response_data['context_docs']]
+        return utils.ContextRetrievalResult(
+            context_docs=[
+                utils.ContextDocument(doc['content'],
+                                      doc['metadata'],
+                                      doc.get('retrieval_score',
+                                              doc['metadata'].get('retrieval_score')))
+                for doc in response_data['context_docs']
+            ],
+            rewritten_query=str(response_data['rewritten_query'])
+        )
 
     def upload_file(self,
                     uploaded_file_path: str) -> str | None:

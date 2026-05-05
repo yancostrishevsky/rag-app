@@ -34,6 +34,17 @@ class ChatResponseAction:
                   context_documents: list[dict[str, Any]] | None = None) -> AsyncIterator[str]:
         """Generates chat response for the given user query and chat history."""
 
+        messages = self.build_messages(user_query, chat_history, context_documents)
+
+        async for chunk in self._llm.astream(messages):
+            yield str(chunk.content)
+
+    def build_messages(self,
+                       user_query: str,
+                       chat_history: list[dict[str, str]],
+                       context_documents: list[dict[str, Any]] | None = None) -> list[BaseMessage]:
+        """Builds the message list sent to the model."""
+
         messages: list[BaseMessage] = [SystemMessage(content=self._SYSTEM_PROMPT)]
 
         for message in chat_history:
@@ -54,8 +65,22 @@ class ChatResponseAction:
 
         messages.append(HumanMessage(content=user_query))
 
-        async for chunk in self._llm.astream(messages):
-            yield str(chunk.content)
+        return messages
+
+    def build_debug_prompt(self,
+                           user_query: str,
+                           chat_history: list[dict[str, str]],
+                           context_documents: list[dict[str, Any]] | None = None) -> str:
+        """Builds a readable representation of the prompt sent to the model."""
+
+        debug_lines: list[str] = []
+
+        for message in self.build_messages(user_query, chat_history, context_documents):
+            debug_lines.append(f'[{message.type.upper()}]')
+            debug_lines.append(str(message.content))
+            debug_lines.append('')
+
+        return '\n'.join(debug_lines).strip()
 
     def _format_context_documents(self,
                                   context_documents: list[dict[str, Any]]) -> str:
@@ -71,12 +96,7 @@ class ChatResponseAction:
 
 
 class SimpleConversationValidateAction:
-    """Validates a conversation using a two line response format.
-
-    The response is expected to contain:
-    1. A single word indicating whether the input is 'good' or 'bad'.
-    2. A brief explanation in words of the decision.
-    """
+    """Validates a conversation using a simple keyword-based response format."""
 
     def __init__(self,
                  system_prompt: str,
@@ -100,7 +120,7 @@ class SimpleConversationValidateAction:
 
     async def run(self,
                   user_query: str,
-                  chat_history: list[dict[str, str]]) -> tuple[bool, str | None]:
+                  chat_history: list[dict[str, str]]) -> tuple[bool, str | None, str]:
         """Returns a tuple indicating whether the input is safe and an optional reason."""
 
         messages = [SystemMessage(self._system_prompt),
@@ -113,22 +133,33 @@ class SimpleConversationValidateAction:
 
         except Exception as e:  # pylint: disable=broad-except
             _logger().error('Validation LLM call failed: %s', str(e))
-            return False, 'Internal system error during conversation validation.'
+            return False, 'Internal system error during conversation validation.', ''
 
         decision = str(response.content)
         decision_lines = [line.strip() for line in decision.split('\n') if line.strip()]
 
         _logger().debug('Validation LLM raw response:\n%s', decision)
 
-        if len(decision_lines) != 2:
-            _logger().error('Unexpected number of lines in validation response: %d',
-                            len(decision_lines))
-            return False, 'Internal system error during conversation validation.'
+        if not decision_lines:
+            _logger().error('Empty validation response.')
+            return False, 'Internal system error during conversation validation.', decision
 
-        if decision_lines[0].lower() == self._good_keyword.lower():
-            return True, None
+        verdict = decision_lines[0].lower()
+        reason_lines: list[str] = []
 
-        return False, decision_lines[1]
+        for line in decision_lines[1:]:
+            if ('<|start_header_id|>' in line or
+                    '<|end_header_id|>' in line or
+                    '<|eot_id|>' in line):
+                break
+            reason_lines.append(line)
+
+        reason = ' '.join(reason_lines).strip() or None
+
+        if verdict == self._good_keyword.lower():
+            return True, None, decision
+
+        return False, reason or 'Input failed conversation validation.', decision
 
     def _format_conversation(self,
                              chat_history: list[dict[str, str]]) -> str:

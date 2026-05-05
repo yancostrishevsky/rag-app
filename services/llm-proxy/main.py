@@ -89,6 +89,7 @@ class ResponseInputCheck(pydantic.BaseModel):
 
     is_ok: bool
     reason: str | None = None
+    raw_response: str | None = None
 
 
 @app.post('/check_input_safety')
@@ -97,12 +98,14 @@ async def check_input_safety(request: ConversationState) -> ResponseInputCheck:
 
     assert llm_service is not None
 
-    is_ok, reason = await llm_service.check_input_safety(
+    is_ok, reason, raw_response = await llm_service.check_input_safety(
         user_query=request.user_message,
         chat_history=request.chat_history
     )
 
-    return ResponseInputCheck(is_ok=is_ok, reason=reason)
+    return ResponseInputCheck(is_ok=is_ok,
+                              reason=reason,
+                              raw_response=raw_response)
 
 
 @app.post('/check_input_relevance')
@@ -111,12 +114,35 @@ async def check_input_relevance(request: ConversationState) -> ResponseInputChec
 
     assert llm_service is not None
 
-    is_ok, reason = await llm_service.check_input_relevance(
+    is_ok, reason, raw_response = await llm_service.check_input_relevance(
         user_query=request.user_message,
         chat_history=request.chat_history
     )
 
-    return ResponseInputCheck(is_ok=is_ok, reason=reason)
+    return ResponseInputCheck(is_ok=is_ok,
+                              reason=reason,
+                              raw_response=raw_response)
+
+
+class ResponseDebugChatRequest(pydantic.BaseModel):
+    """Readable preview of the prompt sent to the main chat model."""
+
+    prompt_preview: str
+
+
+@app.post('/debug_chat_request')
+async def debug_chat_request(request: RequestStreamChatResponse) -> ResponseDebugChatRequest:
+    """Returns a readable representation of the prompt sent to the main chat model."""
+
+    assert llm_service is not None
+
+    return ResponseDebugChatRequest(
+        prompt_preview=llm_service.build_chat_debug_prompt(
+            user_query=request.conversation_state.user_message,
+            chat_history=request.conversation_state.chat_history,
+            context_documents=request.context_docs
+        )
+    )
 
 
 def _configure_logging(script_cfg: omegaconf.DictConfig) -> None:

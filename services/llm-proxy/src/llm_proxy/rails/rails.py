@@ -67,14 +67,16 @@ class ConversationSafetyGuardrail(Guardrail):
     async def should_pass(self, llm_call_context: LLMCallContext) -> GuardrailDecision:
         """Returns true if the conversation is safe, false otherwise."""
 
-        decision, reason = await self._action.run(
+        decision, reason, raw_response = await self._action.run(
             user_query=llm_call_context.user_message,
             chat_history=llm_call_context.chat_history
         )
 
         _logger().debug('Guardrail \'%s\' response: %s', self.name, decision)
 
-        return GuardrailDecision(should_pass=decision, reason=reason)
+        return GuardrailDecision(should_pass=decision,
+                                 reason=reason,
+                                 raw_response=raw_response)
 
     @property
     def name(self) -> str:
@@ -141,14 +143,16 @@ class ConversationRelevanceGuardrail(Guardrail):
     async def should_pass(self, llm_call_context: LLMCallContext) -> GuardrailDecision:
         """Returns true if the user input is relevant, false otherwise."""
 
-        decision, reason = await self._action.run(
+        decision, reason, raw_response = await self._action.run(
             user_query=llm_call_context.user_message,
             chat_history=llm_call_context.chat_history
         )
 
         _logger().debug('Guardrail \'%s\' response: %s', self.name, decision)
 
-        return GuardrailDecision(should_pass=decision, reason=reason)
+        return GuardrailDecision(should_pass=decision,
+                                 reason=reason,
+                                 raw_response=raw_response)
 
     @property
     def name(self) -> str:

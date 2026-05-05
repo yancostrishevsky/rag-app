@@ -20,6 +20,7 @@ class GuardrailDecision:
 
     should_pass: bool
     reason: str | None = None
+    raw_response: str | None = None
 
 
 class Guardrail(ABC):

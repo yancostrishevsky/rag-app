@@ -89,6 +89,7 @@ class RequestCollectContextInfo(pydantic.BaseModel):
 class ResponseCollectContextInfo(pydantic.BaseModel):
     """Response from context-retriever after collecting context documents."""
     context_docs: list[dict[str, Any]]
+    rewritten_query: str
 
 
 @app.post('/collect_context_info')
@@ -97,12 +98,13 @@ async def collect_context_info(request: RequestCollectContextInfo) -> ResponseCo
 
     assert doc_retrieval is not None
 
-    context_docs = await doc_retrieval.retrieve_context_docs(
+    context_docs, rewritten_query = await doc_retrieval.retrieve_context_docs(
         user_message=request.user_message,
         chat_history=request.chat_history
     )
 
-    return ResponseCollectContextInfo(context_docs=context_docs)
+    return ResponseCollectContextInfo(context_docs=context_docs,
+                                      rewritten_query=rewritten_query)
 
 
 class ResponseUploadDocument(pydantic.BaseModel):

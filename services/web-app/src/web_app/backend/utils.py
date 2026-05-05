@@ -34,6 +34,15 @@ class ContextDocument:
 
     content: str
     metadata: dict[str, Any]
+    retrieval_score: float | None = None
+
+
+@dataclasses.dataclass
+class ContextRetrievalResult:
+    """Contains retrieval results along with retrieval debug information."""
+
+    context_docs: list[ContextDocument]
+    rewritten_query: str
 
 
 @dataclasses.dataclass
@@ -41,7 +50,21 @@ class InputCheckResult:
     """Result of input safety, or relevance check."""
 
     is_ok: bool
-    reason: str
+    reason: str | None
+    raw_response: str | None = None
+
+
+@dataclasses.dataclass
+class TurnDebugInfo:
+    """Debug trace for a single chat turn."""
+
+    user_message: str
+    safety_check: InputCheckResult | None = None
+    relevance_check: InputCheckResult | None = None
+    rewritten_query: str | None = None
+    context_docs: list[ContextDocument] = dataclasses.field(default_factory=list)
+    prompt_preview: str | None = None
+    final_response: str | None = None
 
 
 UnstructuredChatHistory: TypeAlias = list[dict[str, str]]
@@ -67,6 +90,7 @@ def context_docs_to_payload(context_docs: list[ContextDocument]) -> Unstructured
         {
             'content': doc.content,
             'metadata': doc.metadata,
+            'retrieval_score': doc.retrieval_score,
         }
         for doc in context_docs
     ]

@@ -5,4 +5,9 @@ CUSTOM_CSS = """
   max-height: 50vh;
   overflow-y: auto;
 }
+
+.debug-trace {
+  max-height: 50vh;
+  overflow-y: auto;
+}
 """

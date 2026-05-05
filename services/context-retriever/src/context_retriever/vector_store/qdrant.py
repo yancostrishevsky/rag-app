@@ -78,7 +78,10 @@ class QdrantProxy(vs_core.VectorStoreProxy):
 
         return [
             Document(page_content=point.payload['content'],
-                     metadata=point.payload['metadata'])
+                     metadata={
+                         **point.payload['metadata'],
+                         'retrieval_score': point.score,
+                     })
             for point in docs.points
             if point.payload is not None
         ]

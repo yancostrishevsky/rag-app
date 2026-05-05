@@ -74,7 +74,7 @@ class DocRetrievalService:
     async def retrieve_context_docs(self,
                                     user_message: str,
                                     chat_history: list[dict[str, str]]
-                                    ) -> list[dict[str, Any]]:
+                                    ) -> tuple[list[dict[str, Any]], str]:
         """Retrieves context documents based on user message and chat history.
 
         Args:
@@ -95,10 +95,23 @@ class DocRetrievalService:
             self._cfg.max_context_docs,
             self._cfg.similarity_threshold)
 
-        return [
+        context_docs = [
             {'content': doc.page_content, 'metadata': doc.metadata}
             for doc in retrieved_docs
         ]
+
+        _logger().debug('Retrieved %d context docs: %s',
+                        len(context_docs),
+                        [
+                            {
+                                'title': doc['metadata'].get('title'),
+                                'page': doc['metadata'].get('page'),
+                                'retrieval_score': doc['metadata'].get('retrieval_score'),
+                            }
+                            for doc in context_docs
+                        ])
+
+        return context_docs, query
 
     async def _construct_query(self,
                                user_message: str,

@@ -17,7 +17,7 @@ services:
     networks:
       - rag-net
     environment:
-      - LLM_GENERATOR_MODEL=llama3.1:8b
+      - LLM_GENERATOR_MODEL=gemma3:4b
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11434
     healthcheck:
@@ -42,7 +42,7 @@ services:
     networks:
       - rag-net
     environment:
-      - LLM_GENERATOR_MODEL=dolphin3:8b
+      - LLM_GENERATOR_MODEL=qwen2.5:3b
       - OLLAMA_DEBUG=0
       - OLLAMA_HOST=0.0.0.0:11435
     healthcheck:

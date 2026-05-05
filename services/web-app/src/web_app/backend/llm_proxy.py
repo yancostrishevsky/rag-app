@@ -96,6 +96,29 @@ class LLMProxyService:
             url=f"{self._endpoint_cfg.url}/check_input_relevance"
         )
 
+    def build_chat_debug_prompt(self,
+                                user_message: str,
+                                chat_history: utils.ChatHistory,
+                                context_docs: list[utils.ContextDocument]) -> str:
+        """Returns a readable preview of the prompt sent to the main chat model."""
+
+        payload = {
+            'conversation_state': {
+                'user_message': user_message,
+                'chat_history': utils.chat_history_to_payload(chat_history)
+            },
+            'context_docs': utils.context_docs_to_payload(context_docs)
+        }
+
+        response = requests.post(
+            f'{self._endpoint_cfg.url}/debug_chat_request',
+            json=payload,
+            timeout=self._endpoint_cfg.connection_timeout
+        )
+        response.raise_for_status()
+
+        return str(response.json()['prompt_preview'])
+
     def _sanitize_input(self,
                         user_message: str,
                         chat_history: utils.ChatHistory,
@@ -120,4 +143,6 @@ class LLMProxyService:
         response.raise_for_status()
 
         resp_json = response.json()
-        return utils.InputCheckResult(is_ok=resp_json['is_ok'], reason=resp_json['reason'])
+        return utils.InputCheckResult(is_ok=resp_json['is_ok'],
+                                      reason=resp_json['reason'],
+                                      raw_response=resp_json.get('raw_response'))
